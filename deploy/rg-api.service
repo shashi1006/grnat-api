@@ -1,0 +1,19 @@
+[Unit]
+Description=ReadyGeneration API
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/readygeneration
+EnvironmentFile=/opt/readygeneration/.env
+ExecStart=/opt/readygeneration/api
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=rg-api
+
+[Install]
+WantedBy=multi-user.target

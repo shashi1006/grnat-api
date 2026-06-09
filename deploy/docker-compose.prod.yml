@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    env_file: /opt/readygeneration/.env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-readygeneration}
+      POSTGRES_USER: ${POSTGRES_USER:-rg}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-rg} -d ${POSTGRES_DB:-readygeneration}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - rg-net
+
+volumes:
+  pgdata:
+
+networks:
+  rg-net:
+    driver: bridge

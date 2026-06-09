@@ -1,0 +1,1314 @@
+basePath: /api/v1
+definitions:
+  github_com_readygeneration_readygeneration-backend_internal_domain.CompetitionLevel:
+    enum:
+    - low
+    - medium
+    - high
+    - very_high
+    type: string
+    x-enum-varnames:
+    - CompetitionLow
+    - CompetitionMedium
+    - CompetitionHigh
+    - CompetitionVeryHigh
+  github_com_readygeneration_readygeneration-backend_internal_domain.DifficultyLevel:
+    enum:
+    - easy
+    - medium
+    - hard
+    - very_hard
+    type: string
+    x-enum-varnames:
+    - DifficultyEasy
+    - DifficultyMedium
+    - DifficultyHard
+    - DifficultyVeryHard
+  github_com_readygeneration_readygeneration-backend_internal_domain.FunderType:
+    enum:
+    - federal
+    - state
+    - local
+    - private
+    - foundation
+    - corporate
+    type: string
+    x-enum-varnames:
+    - FunderFederal
+    - FunderState
+    - FunderLocal
+    - FunderPrivate
+    - FunderFoundation
+    - FunderCorporate
+  github_com_readygeneration_readygeneration-backend_internal_domain.GrantStatus:
+    enum:
+    - active
+    - closed
+    - archived
+    - draft
+    type: string
+    x-enum-varnames:
+    - GrantStatusActive
+    - GrantStatusClosed
+    - GrantStatusArchived
+    - GrantStatusDraft
+  github_com_readygeneration_readygeneration-backend_pkg_response.APIError:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    type: object
+  github_com_readygeneration_readygeneration-backend_pkg_response.Envelope:
+    properties:
+      data: {}
+      error:
+        $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.APIError'
+      meta:
+        $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Meta'
+      success:
+        type: boolean
+    type: object
+  github_com_readygeneration_readygeneration-backend_pkg_response.Meta:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+    type: object
+  internal_handler.captureLeadRequest:
+    properties:
+      city:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      interested_grants:
+        items:
+          type: string
+        type: array
+      last_name:
+        type: string
+      org_name:
+        type: string
+      org_type:
+        type: string
+      phone:
+        type: string
+      quiz_responses:
+        additionalProperties: true
+        type: object
+      source:
+        type: string
+      state:
+        type: string
+      utm_campaign:
+        type: string
+      utm_medium:
+        type: string
+      utm_source:
+        type: string
+      zip:
+        type: string
+    required:
+    - email
+    type: object
+  internal_handler.changePasswordRequest:
+    properties:
+      new_password:
+        minLength: 8
+        type: string
+      old_password:
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
+  internal_handler.convertLeadRequest:
+    properties:
+      org_id:
+        type: string
+    required:
+    - org_id
+    type: object
+  internal_handler.createApplicationRequest:
+    properties:
+      assigned_to:
+        type: string
+      grant_id:
+        type: string
+      internal_deadline:
+        type: string
+      notes:
+        type: string
+      priority:
+        type: string
+    required:
+    - grant_id
+    type: object
+  internal_handler.createGrantRequest:
+    properties:
+      agency:
+        type: string
+      application_url:
+        type: string
+      category:
+        type: string
+      competition_level:
+        $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_internal_domain.CompetitionLevel'
+      deadline:
+        type: string
+      description:
+        type: string
+      difficulty_level:
+        $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_internal_domain.DifficultyLevel'
+      eligible_org_types:
+        items:
+          type: string
+        type: array
+      eligible_populations:
+        items:
+          type: string
+        type: array
+      eligible_states:
+        items:
+          type: string
+        type: array
+      focus_areas:
+        items:
+          type: string
+        type: array
+      funder_name:
+        type: string
+      funder_type:
+        $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_internal_domain.FunderType'
+      match_percentage:
+        type: number
+      max_award_amount:
+        type: integer
+      min_award_amount:
+        type: integer
+      open_date:
+        type: string
+      requires_501c3:
+        type: boolean
+      requires_audited_fin:
+        type: boolean
+      requires_match:
+        type: boolean
+      slug:
+        type: string
+      status:
+        $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_internal_domain.GrantStatus'
+      synopsis:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      total_funding_available:
+        type: integer
+    required:
+    - funder_name
+    - funder_type
+    - slug
+    - title
+    type: object
+  internal_handler.createOrgRequest:
+    properties:
+      city:
+        type: string
+      ein:
+        type: string
+      mission:
+        type: string
+      name:
+        type: string
+      org_type:
+        type: string
+      phone:
+        type: string
+      slug:
+        type: string
+      state:
+        type: string
+      website:
+        type: string
+      zip:
+        type: string
+    required:
+    - name
+    - org_type
+    - slug
+    type: object
+  internal_handler.generateNarrativeRequest:
+    properties:
+      application_id:
+        type: string
+      custom_notes:
+        type: string
+      section:
+        type: string
+      word_target:
+        type: integer
+    required:
+    - section
+    type: object
+  internal_handler.ingestNOFORequest:
+    properties:
+      text:
+        type: string
+    required:
+    - text
+    type: object
+  internal_handler.loginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  internal_handler.resetPasswordRequest:
+    properties:
+      new_password:
+        minLength: 8
+        type: string
+      token:
+        type: string
+    required:
+    - new_password
+    - token
+    type: object
+  internal_handler.signupRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  internal_handler.updateApplicationRequest:
+    properties:
+      award_amount:
+        type: integer
+      internal_deadline:
+        type: string
+      notes:
+        type: string
+      priority:
+        type: string
+      stage:
+        type: string
+      status:
+        type: string
+      submission_date:
+        type: string
+    type: object
+  internal_handler.updateApplicationStatusRequest:
+    properties:
+      stage:
+        type: string
+      status:
+        type: string
+    required:
+    - status
+    type: object
+  internal_handler.updateGrantRequest:
+    properties:
+      deadline:
+        type: string
+      description:
+        type: string
+      status:
+        type: string
+      synopsis:
+        type: string
+      title:
+        type: string
+    type: object
+  internal_handler.updateLeadRequest:
+    properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
+      notes:
+        type: string
+      org_name:
+        type: string
+      phone:
+        type: string
+      score:
+        type: integer
+      status:
+        type: string
+    type: object
+  internal_handler.updateOrgRequest:
+    properties:
+      city:
+        type: string
+      logo_url:
+        type: string
+      mission:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      state:
+        type: string
+      website:
+        type: string
+      zip:
+        type: string
+    type: object
+  internal_handler.upsertProfileRequest:
+    properties:
+      annual_budget:
+        type: integer
+      focus_issues:
+        items:
+          type: string
+        type: array
+      has_501c3:
+        type: boolean
+      has_audited_financials:
+        type: boolean
+      has_indirect_cost_rate:
+        type: boolean
+      indirect_cost_rate_pct:
+        type: number
+      narrative:
+        type: string
+      num_employees:
+        type: integer
+      num_volunteers:
+        type: integer
+      populations_served:
+        items:
+          type: string
+        type: array
+      prior_federal_grants:
+        type: boolean
+      program_areas:
+        items:
+          type: string
+        type: array
+      service_areas:
+        items:
+          type: string
+        type: array
+      years_operating:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Grant intelligence platform API
+  title: ReadyGeneration API
+  version: "1.0"
+paths:
+  /admin/grants:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Grant payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.createGrantRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Create a new grant (admin)
+      tags:
+      - grants
+  /admin/grants/{id}:
+    delete:
+      parameters:
+      - description: Grant UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Archive a grant (admin)
+      tags:
+      - grants
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Grant UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.updateGrantRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Update a grant's mutable fields
+      tags:
+      - grants
+  /admin/grants/{id}/nofo:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Grant UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: NOFO text
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.ingestNOFORequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Ingest NOFO document text for a grant (admin)
+      tags:
+      - grants
+  /admin/leads:
+    get:
+      parameters:
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      - description: Page offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: List all leads (admin)
+      tags:
+      - leads
+  /admin/leads/{id}:
+    get:
+      parameters:
+      - description: Lead UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Get a lead by ID
+      tags:
+      - leads
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Lead UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.updateLeadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Update a lead record
+      tags:
+      - leads
+  /admin/leads/{id}/activities:
+    get:
+      parameters:
+      - description: Lead UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Get activity timeline for a lead
+      tags:
+      - leads
+  /admin/leads/{id}/convert:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Lead UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Target organization
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.convertLeadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Convert a lead to a paying organization
+      tags:
+      - leads
+  /admin/stats:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Get aggregate platform statistics
+      tags:
+      - admin
+  /applications/{application_id}/narratives:
+    get:
+      parameters:
+      - description: Application UUID
+        in: path
+        name: application_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: List AI narratives for an application
+      tags:
+      - narratives
+  /applications/{id}:
+    get:
+      parameters:
+      - description: Application UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Get a grant application by ID
+      tags:
+      - applications
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Application UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.updateApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Update application fields
+      tags:
+      - applications
+  /applications/{id}/activities:
+    get:
+      parameters:
+      - description: Application UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Get activity log for an application
+      tags:
+      - applications
+  /applications/{id}/narratives:
+    get:
+      parameters:
+      - description: Application UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Get all AI narratives for an application
+      tags:
+      - applications
+  /applications/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Application UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New status
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.updateApplicationStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Advance or change an application's pipeline status
+      tags:
+      - applications
+  /auth/change-password:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Change password payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.changePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Change the authenticated user's password
+      tags:
+      - auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Login payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.loginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      summary: Authenticate and receive a JWT
+      tags:
+      - auth
+  /auth/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Get the authenticated user
+      tags:
+      - auth
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Reset password payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.resetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      summary: Reset password using a reset token
+      tags:
+      - auth
+  /auth/signup:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Signup payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.signupRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      summary: Register a new user
+      tags:
+      - auth
+  /grants:
+    get:
+      parameters:
+      - description: Page size (default 20)
+        in: query
+        name: limit
+        type: integer
+      - description: Page offset
+        in: query
+        name: offset
+        type: integer
+      - description: Comma-separated statuses
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      summary: List active grants
+      tags:
+      - grants
+  /grants/{id}:
+    get:
+      parameters:
+      - description: Grant UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      summary: Get a grant by ID
+      tags:
+      - grants
+  /grants/search:
+    get:
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      - description: Page offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      summary: Search grants by title keyword
+      tags:
+      - grants
+  /grants/semantic-search:
+    get:
+      parameters:
+      - description: Free-text description
+        in: query
+        name: q
+        required: true
+        type: string
+      - description: Number of results (default 10)
+        in: query
+        name: top_k
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      summary: Semantic (vector) search for grants
+      tags:
+      - grants
+  /leads:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Lead data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.captureLeadRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      summary: Capture a new lead (from quiz or landing page)
+      tags:
+      - leads
+  /orgs:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Organization data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.createOrgRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Create a new organization
+      tags:
+      - organizations
+  /orgs/{id}:
+    get:
+      parameters:
+      - description: Organization UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Get an organization by ID
+      tags:
+      - organizations
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Organization UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.updateOrgRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Update an organization
+      tags:
+      - organizations
+  /orgs/{id}/profile:
+    get:
+      parameters:
+      - description: Organization UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Get the detailed profile for an organization
+      tags:
+      - organizations
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Organization UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Profile data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.upsertProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Create or update an organization's eligibility profile
+      tags:
+      - organizations
+  /orgs/{org_id}/applications:
+    get:
+      parameters:
+      - description: Organization UUID
+        in: path
+        name: org_id
+        required: true
+        type: string
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      - description: Page offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: List applications for an organization
+      tags:
+      - applications
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Organization UUID
+        in: path
+        name: org_id
+        required: true
+        type: string
+      - description: Application data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.createApplicationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Start tracking a grant application
+      tags:
+      - applications
+  /orgs/{org_id}/grants/{grant_id}/narratives:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Organization UUID
+        in: path
+        name: org_id
+        required: true
+        type: string
+      - description: Grant UUID
+        in: path
+        name: grant_id
+        required: true
+        type: string
+      - description: Generation parameters
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.generateNarrativeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Generate an AI narrative section for a grant application
+      tags:
+      - narratives
+  /orgs/{org_id}/grants/{grant_id}/score:
+    get:
+      parameters:
+      - description: Organization UUID
+        in: path
+        name: org_id
+        required: true
+        type: string
+      - description: Grant UUID
+        in: path
+        name: grant_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Get stored compatibility score
+      tags:
+      - scoring
+    post:
+      parameters:
+      - description: Organization UUID
+        in: path
+        name: org_id
+        required: true
+        type: string
+      - description: Grant UUID
+        in: path
+        name: grant_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Compute compatibility score for an org/grant pair
+      tags:
+      - scoring
+  /orgs/{org_id}/score-all:
+    post:
+      parameters:
+      - description: Organization UUID
+        in: path
+        name: org_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: Trigger bulk scoring of all active grants for an org
+      tags:
+      - scoring
+  /orgs/{org_id}/top-grants:
+    get:
+      parameters:
+      - description: Organization UUID
+        in: path
+        name: org_id
+        required: true
+        type: string
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      - description: Page offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_readygeneration_readygeneration-backend_pkg_response.Envelope'
+      security:
+      - BearerAuth: []
+      summary: List top-scored grants for an organization
+      tags:
+      - scoring
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
