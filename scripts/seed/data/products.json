@@ -1,0 +1,412 @@
+{
+  "catalogId": "fundingos-products-v1",
+  "catalogName": "FundingOS Product Catalog",
+  "version": "1.0",
+  "products": [
+    {
+      "id": "acs-emergency-aid-station",
+      "category": "Fixed Infrastructure",
+      "productName": "ACS Emergency Aid Station",
+      "overview": "Wall-mounted preparedness infrastructure providing immediate access to bleeding control and AED response equipment across schools, workplaces, healthcare facilities, and public venues.",
+      "selectionType": "configurationCards",
+      "configurations": [
+        {
+          "id": "bleeding-control",
+          "title": "Bleeding Control",
+          "price": 1100,
+          "description": "Rapid-response bleeding control station designed to support immediate intervention during severe bleeding emergencies.",
+          "includes": [
+            "8 ACS Basic Bleeding Control Kits",
+            "2 ACS Bleeding Control Belts",
+            "Military-grade tourniquets",
+            "Trauma dressings and wound packing gauze",
+            "Trauma shears, protective gloves, and emergency markers",
+            "Wall-mounted emergency cabinet"
+          ],
+          "aedReadyUpgrade": {
+            "enabled": true,
+            "price": 150,
+            "finalPrice": 1250,
+            "title": "Already have AEDs?",
+            "description": "Add AED-ready cabinet integration for customer-supplied AEDs.",
+            "includes": [
+              "AED shelf and cabinet integration",
+              "Supports customer-supplied AEDs",
+              "Improves visibility and public access"
+            ]
+          }
+        },
+        {
+          "id": "advanced-bleeding-control",
+          "title": "Advanced Bleeding Control",
+          "price": 1500,
+          "description": "Everything included in Bleeding Control plus advanced trauma supplies designed to support more severe and complex injuries.",
+          "includes": [
+            "Everything included in Bleeding Control",
+            "8 ACS Advanced Bleeding Control Kits",
+            "QuikClot\u00ae hemostatic dressings",
+            "HyFin\u00ae Chest Seal Twin Pack",
+            "Survival blankets",
+            "Wall-mounted emergency cabinet"
+          ],
+          "aedReadyUpgrade": {
+            "enabled": true,
+            "price": 150,
+            "finalPrice": 1650,
+            "title": "Already have AEDs?",
+            "description": "Add AED-ready cabinet integration for customer-supplied AEDs.",
+            "includes": [
+              "AED shelf and cabinet integration",
+              "Supports customer-supplied AEDs",
+              "Improves visibility and public access"
+            ]
+          }
+        },
+        {
+          "id": "aed-bleeding-control",
+          "title": "AED + Bleeding Control",
+          "price": 4700,
+          "badge": "Includes ZOLL 3 AED\u00ae",
+          "description": "Combines cardiac emergency response with essential bleeding control resources in a single preparedness station.",
+          "includes": [
+            "ZOLL 3 AED\u00ae with Real CPR Help\u00ae technology",
+            "8 ACS Basic Bleeding Control Kits",
+            "2 ACS Bleeding Control Belts",
+            "Military-grade tourniquets",
+            "Trauma dressings and wound packing gauze",
+            "AED-ready emergency cabinet"
+          ]
+        },
+        {
+          "id": "aed-advanced-bleeding-control",
+          "title": "AED + Advanced Bleeding Control",
+          "price": 5100,
+          "badge": "Most Comprehensive",
+          "recommended": true,
+          "description": "Comprehensive emergency aid station combining industry-leading cardiac response technology with advanced bleeding control capabilities.",
+          "includes": [
+            "ZOLL 3 AED\u00ae with Real CPR Help\u00ae technology",
+            "Everything included in Advanced Bleeding Control",
+            "8 ACS Advanced Bleeding Control Kits",
+            "2 ACS Bleeding Control Belts",
+            "Military-grade tourniquets",
+            "QuikClot\u00ae hemostatic dressings",
+            "HyFin\u00ae Chest Seal Twin Pack",
+            "Survival blankets",
+            "AED-ready emergency cabinet"
+          ]
+        }
+      ],
+      "fundingAlignment": [
+        "School safety",
+        "Injury prevention",
+        "Public health",
+        "Workplace safety",
+        "Community preparedness"
+      ],
+      "eligibleProducts": [
+        "bleeding",
+        "firstaid",
+        "training",
+        "aed",
+        "choking"
+      ]
+    },
+    {
+      "id": "acs-digital-wall-station",
+      "category": "Smart Infrastructure",
+      "productName": "ACS Digital Wall Station",
+      "overview": "A connected preparedness platform combining emergency communications, lifesaving equipment, digital messaging, and optional security integration in a permanent installation.",
+      "programType": "Five-Year Emergency Preparedness Program",
+      "selectionType": "baseProductWithToggles",
+      "baseProgramValue": 22495,
+      "hardwareEquipmentCommissioningShipping": 14995,
+      "fiveYearSoftwareConnectivityContentManagement": 7500,
+      "included": [
+        "43-inch commercial digital display",
+        "ZOLL 3 AED\u00ae with Real CPR Help\u00ae technology",
+        "8 ACS Basic Bleeding Control Kits deployed across 2 rapid-access belts",
+        "LifeVac\u00ae choking rescue device",
+        "Comprehensive first aid supplies",
+        "Emergency communications hardware",
+        "Integrated storage pouches and labeled supply compartments",
+        "Factory configuration and testing prior to shipment",
+        "Shipping to customer location"
+      ],
+      "subscriptionIncludes": [
+        "Software platform access",
+        "Digital content management",
+        "Emergency message publishing",
+        "Cellular connectivity",
+        "Platform updates",
+        "Administrative dashboard access"
+      ],
+      "traumaConfiguration": {
+        "type": "radio",
+        "default": "basic",
+        "options": [
+          {
+            "id": "basic",
+            "label": "ACS Basic Bleeding Control Kits",
+            "priceAdd": 0
+          },
+          {
+            "id": "advanced",
+            "label": "ACS Advanced Bleeding Control Kits",
+            "priceAdd": 400,
+            "includes": [
+              "Everything included in ACS Basic Bleeding Control Kits",
+              "QuikClot\u00ae hemostatic dressings",
+              "HyFin\u00ae Chest Seal Twin Pack",
+              "Survival blankets"
+            ]
+          }
+        ]
+      },
+      "optionalEnhancements": [
+        {
+          "id": "security-situational-awareness",
+          "type": "checkbox",
+          "label": "Security & Situational Awareness Package",
+          "priceAdd": 400,
+          "includes": [
+            "Integrated camera",
+            "Video Management System (VMS) compatibility",
+            "Video feed available for customer-managed security environments",
+            "Supports security, public safety, and situational awareness initiatives"
+          ],
+          "note": "Monitoring, recording, storage, and VMS configuration are managed by the customer and/or their security provider."
+        },
+        {
+          "id": "temperature-controlled-storage",
+          "type": "checkbox",
+          "label": "Temperature-Controlled Storage Module",
+          "priceAdd": 500,
+          "includes": [
+            "Integrated cooling compartment",
+            "Seamless integration within the ACS Digital Wall Station",
+            "Storage for Narcan\u00ae and temperature-sensitive emergency supplies",
+            "Expanded support for opioid response and public health initiatives"
+          ]
+        }
+      ],
+      "pricingExamples": {
+        "standard": 22495,
+        "advancedTrauma": 22895,
+        "securityPackage": 22895,
+        "temperatureControlledStorage": 22995,
+        "fullyEquipped": 23795
+      },
+      "warranty": {
+        "hardwareWarranty": "3-Year Manufacturer Warranty",
+        "note": "Hardware warranty claims are processed through the manufacturer according to applicable warranty terms."
+      },
+      "installation": {
+        "included": false,
+        "description": "Wall-mounted installation is the responsibility of the customer or their designated facilities contractor."
+      },
+      "fundingAlignment": [
+        "Emergency communications",
+        "School safety",
+        "Smart campus",
+        "Security enhancement",
+        "Public safety technology",
+        "Community preparedness",
+        "Opioid response"
+      ]
+    },
+    {
+      "id": "acs-mobile-digital-station",
+      "category": "Smart Infrastructure",
+      "productName": "ACS Mobile Digital Station",
+      "overview": "Mobile preparedness infrastructure delivering emergency communications, lifesaving equipment access, and situational awareness wherever temporary or flexible deployment is required.",
+      "programType": "Five-Year Emergency Preparedness Program",
+      "featuredProduct": true,
+      "selectionType": "baseProductWithToggles",
+      "baseProgramValue": 28300,
+      "hardwareEquipmentCommissioningShipping": 20800,
+      "fiveYearSoftwareConnectivityContentManagement": 7500,
+      "included": [
+        "43-inch commercial digital display",
+        "Integrated battery power system",
+        "Indoor and outdoor deployment capability",
+        "ZOLL 3 AED\u00ae with Real CPR Help\u00ae technology",
+        "8 ACS Basic Bleeding Control Kits deployed across 2 rapid-access belts",
+        "LifeVac\u00ae choking rescue device",
+        "Comprehensive first aid supplies",
+        "10 lb fire extinguisher",
+        "Emergency communications hardware",
+        "Integrated storage pouches and labeled supply compartments",
+        "Factory configuration and testing prior to shipment",
+        "Shipping to customer location"
+      ],
+      "subscriptionIncludes": [
+        "Software platform access",
+        "Digital content management",
+        "Emergency message publishing",
+        "Cellular connectivity",
+        "Platform updates",
+        "Administrative dashboard access"
+      ],
+      "traumaConfiguration": {
+        "type": "radio",
+        "default": "basic",
+        "options": [
+          {
+            "id": "basic",
+            "label": "ACS Basic Bleeding Control Kits",
+            "priceAdd": 0
+          },
+          {
+            "id": "advanced",
+            "label": "ACS Advanced Bleeding Control Kits",
+            "priceAdd": 400,
+            "includes": [
+              "Everything included in ACS Basic Bleeding Control Kits",
+              "QuikClot\u00ae hemostatic dressings",
+              "HyFin\u00ae Chest Seal Twin Pack",
+              "Survival blankets"
+            ]
+          }
+        ]
+      },
+      "optionalEnhancements": [
+        {
+          "id": "security-situational-awareness",
+          "type": "checkbox",
+          "label": "Security & Situational Awareness Package",
+          "priceAdd": 400,
+          "includes": [
+            "Integrated camera",
+            "Video Management System (VMS) compatibility",
+            "Video feed available for customer-managed security environments",
+            "Supports security, public safety, and situational awareness initiatives"
+          ],
+          "note": "Monitoring, recording, storage, and VMS configuration are managed by the customer and/or their security provider."
+        },
+        {
+          "id": "temperature-controlled-storage",
+          "type": "checkbox",
+          "label": "Temperature-Controlled Storage Module",
+          "priceAdd": 500,
+          "includes": [
+            "Integrated cooling compartment",
+            "Seamless integration within the ACS Mobile Digital Station",
+            "Storage for Narcan\u00ae and temperature-sensitive emergency supplies",
+            "Expanded support for opioid response and public health initiatives"
+          ]
+        }
+      ],
+      "pricingBreakdown": {
+        "mobileDigitalStationHardware": 19000,
+        "factoryCommissioning": 1000,
+        "shipping": 800,
+        "hardwareEquipmentCommissioningShipping": 20800,
+        "fiveYearSoftwareConnectivityContentManagement": 7500,
+        "totalFiveYearProgramValue": 28300
+      },
+      "pricingExamples": {
+        "standard": 28300,
+        "advancedTrauma": 28700,
+        "securityPackage": 28700,
+        "temperatureControlledStorage": 28800,
+        "fullyEquipped": 29600
+      },
+      "warranty": {
+        "hardwareWarranty": "3-Year Manufacturer Warranty",
+        "note": "Hardware warranty claims are processed through the manufacturer according to applicable warranty terms."
+      },
+      "installation": {
+        "included": false,
+        "description": "No installation required. Unit is delivered ready for deployment and operation."
+      },
+      "deploymentAdvantages": [
+        "Battery-powered operation",
+        "Indoor and outdoor deployment",
+        "No permanent installation required",
+        "Rapid relocation capability",
+        "Supports events, temporary activations, and emergency operations",
+        "Can be repositioned as facility needs change"
+      ],
+      "fundingAlignment": [
+        "Emergency communications",
+        "School safety",
+        "Smart campus",
+        "Public safety technology",
+        "Community preparedness",
+        "Event preparedness",
+        "Emergency management",
+        "Opioid response"
+      ]
+    },
+    {
+      "id": "acs-mobile-event-pod",
+      "category": "Deployable Infrastructure",
+      "productName": "ACS Mobile Event Pod",
+      "overview": "High-visibility mobile emergency response platform designed for sporting events, festivals, concerts, races, and large public gatherings.",
+      "selectionType": "baseProductWithTraumaToggle",
+      "baseProjectCost": 19600,
+      "hardwareEquipment": 18750,
+      "shipping": 850,
+      "included": [
+        "16 ACS Basic Bleeding Control Kits deployed across 4 rapid-access belts",
+        "ZOLL 3 AED\u00ae with Real CPR Help\u00ae technology",
+        "LifeVac\u00ae choking rescue device",
+        "Comprehensive first aid supplies",
+        "Emergency response splint",
+        "High-visibility flag and wayfinding system",
+        "Wheeled mobile deployment platform",
+        "Outdoor-ready event response design",
+        "Integrated storage compartments and supply organization",
+        "Factory configured and tested prior to shipment"
+      ],
+      "traumaConfiguration": {
+        "type": "radio",
+        "default": "basic",
+        "options": [
+          {
+            "id": "basic",
+            "label": "ACS Basic Bleeding Control Kits",
+            "priceAdd": 0
+          },
+          {
+            "id": "advanced",
+            "label": "ACS Advanced Bleeding Control Kits",
+            "priceAdd": 800,
+            "includes": [
+              "Everything included in ACS Basic Bleeding Control Kits",
+              "QuikClot\u00ae hemostatic dressings",
+              "HyFin\u00ae Chest Seal Twin Pack",
+              "Survival blankets"
+            ]
+          }
+        ]
+      },
+      "pricingExamples": {
+        "standard": 19600,
+        "advancedTrauma": 20400
+      },
+      "services": {
+        "included": false,
+        "description": "No software or connectivity services required."
+      },
+      "deploymentAdvantages": [
+        "High-visibility emergency response point",
+        "Rapid event deployment",
+        "Outdoor-ready design",
+        "No software subscription required",
+        "Designed for mass gatherings and temporary activations"
+      ],
+      "fundingAlignment": [
+        "Event safety",
+        "Community preparedness",
+        "Public health",
+        "Emergency management",
+        "Parks and recreation",
+        "Mass gathering preparedness",
+        "Community resilience",
+        "Public safety initiatives"
+      ]
+    }
+  ]
+}

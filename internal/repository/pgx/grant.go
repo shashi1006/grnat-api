@@ -30,10 +30,10 @@ func (r *grantRepo) Create(ctx context.Context, p repository.CreateGrantParams) 
 			requires_501c3, requires_audited_fin, requires_match, match_percentage,
 			min_award_amount, max_award_amount, total_funding_available,
 			application_url, status, deadline, open_date,
-			difficulty_level, competition_level, tags, created_by
+			difficulty_level, competition_level, tags, metadata, created_by
 		) VALUES (
 			$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,
-			$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29
+			$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30
 		) RETURNING *`
 	var deadline, openDate *time.Time
 	if p.Deadline != nil {
@@ -51,7 +51,7 @@ func (r *grantRepo) Create(ctx context.Context, p repository.CreateGrantParams) 
 		p.Requires501c3, p.RequiresAuditedFin, p.RequiresMatch, p.MatchPercentage,
 		p.MinAwardAmount, p.MaxAwardAmount, p.TotalFundingAvailable,
 		p.ApplicationURL, string(p.Status), deadline, openDate,
-		string(p.DifficultyLevel), string(p.CompetitionLevel), p.Tags, p.CreatedBy,
+		string(p.DifficultyLevel), string(p.CompetitionLevel), p.Tags, p.Metadata, p.CreatedBy,
 	)
 	return scanGrant(row)
 }
@@ -110,9 +110,10 @@ func (r *grantRepo) Update(ctx context.Context, p repository.UpdateGrantParams) 
 		    description = COALESCE($3, description),
 		    synopsis    = COALESCE($4, synopsis),
 		    status      = COALESCE($5, status),
+		    metadata    = COALESCE($6, metadata),
 		    updated_at  = NOW()
 		WHERE id=$1 RETURNING *`
-	return scanGrant(r.db.QueryRow(ctx, q, p.ID, p.Title, p.Description, p.Synopsis, p.Status))
+	return scanGrant(r.db.QueryRow(ctx, q, p.ID, p.Title, p.Description, p.Synopsis, p.Status, p.Metadata))
 }
 
 func (r *grantRepo) UpdateEmbedding(ctx context.Context, id uuid.UUID, embedding []float32) error {
@@ -296,7 +297,11 @@ func scanGrantWithExtra(row scannable, distance *float64) (*domain.Grant, error)
 	return &g, nil
 }
 
-func scanGrants(rows interface{ Next() bool; Scan(...any) error; Err() error }) ([]*domain.Grant, error) {
+func scanGrants(rows interface {
+	Next() bool
+	Scan(...any) error
+	Err() error
+}) ([]*domain.Grant, error) {
 	var grants []*domain.Grant
 	for rows.Next() {
 		g, err := scanGrant(rows)

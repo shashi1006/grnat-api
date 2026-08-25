@@ -1,0 +1,719 @@
+[
+  {
+    "id": "stop-school-violence-act-svpp",
+    "category": "Federal \u2014 Department of Justice",
+    "programName": "STOP School Violence Act (SVPP)",
+    "agency": "DOJ / COPS Office",
+    "awardRange": "Up to $500K",
+    "cycle": "Annual \u2014 Spring",
+    "eligibleOrgTypes": [
+      "school"
+    ],
+    "eligibleProducts": [
+      "bleeding",
+      "aed",
+      "choking",
+      "firstaid",
+      "notification",
+      "camera",
+      "training"
+    ],
+    "specificNeed": "",
+    "activeStates": [],
+    "url": "https://cops.usdoj.gov/svpp",
+    "strategyNotes": "$73M/yr through FY2026. Technology, equipment, and training all covered. Camera and notification screen both explicitly eligible.",
+    "hasNarrativeTemplate": true,
+    "hasAcsEndorsement": true,
+    "isSupplemental": false,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "cops-school-violence-prevention-program",
+    "category": "Federal \u2014 Department of Justice",
+    "programName": "COPS School Violence Prevention Program",
+    "agency": "DOJ / COPS Office",
+    "awardRange": "Varies",
+    "cycle": "Annual",
+    "eligibleOrgTypes": [
+      "school"
+    ],
+    "eligibleProducts": [
+      "notification",
+      "camera",
+      "training",
+      "bleeding",
+      "aed"
+    ],
+    "specificNeed": "",
+    "activeStates": [],
+    "url": "https://cops.usdoj.gov",
+    "strategyNotes": "Emergency notification systems and surveillance technology. Notification screen is an explicit fit.",
+    "hasNarrativeTemplate": false,
+    "hasAcsEndorsement": false,
+    "isSupplemental": false,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "fema-homeland-security-grant-program-hsgp",
+    "category": "Federal \u2014 FEMA / DHS",
+    "programName": "FEMA Homeland Security Grant Program (HSGP)",
+    "agency": "DHS / State-administered",
+    "awardRange": "Varies by state",
+    "cycle": "Annual \u2014 Feb through Jun",
+    "eligibleOrgTypes": [
+      "govt",
+      "nonprofit",
+      "ems-health"
+    ],
+    "eligibleProducts": [
+      "bleeding",
+      "aed",
+      "choking",
+      "firstaid",
+      "notification",
+      "camera",
+      "training"
+    ],
+    "specificNeed": "",
+    "activeStates": [],
+    "url": "https://www.fema.gov/grants/preparedness/homeland-security",
+    "strategyNotes": "Broadest federal preparedness program. Equipment, training, and planning all eligible.",
+    "hasNarrativeTemplate": true,
+    "hasAcsEndorsement": false,
+    "isSupplemental": false,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "fema-bric",
+    "category": "Federal \u2014 FEMA / DHS",
+    "programName": "FEMA BRIC",
+    "agency": "FEMA",
+    "awardRange": "Up to $600K",
+    "cycle": "Annual \u2014 Fall",
+    "eligibleOrgTypes": [
+      "govt"
+    ],
+    "eligibleProducts": [
+      "bleeding",
+      "aed",
+      "notification",
+      "camera",
+      "firstaid",
+      "choking"
+    ],
+    "specificNeed": "",
+    "activeStates": [],
+    "url": "https://www.fema.gov/grants/mitigation/bric",
+    "strategyNotes": "Building Resilient Infrastructure. Public safety preparedness equipment and connected systems.",
+    "hasNarrativeTemplate": false,
+    "hasAcsEndorsement": false,
+    "isSupplemental": false,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "fema-next-generation-warning-system-ngwsgp",
+    "category": "Federal \u2014 FEMA / DHS",
+    "programName": "FEMA Next Generation Warning System (NGWSGP)",
+    "agency": "FEMA / DHS",
+    "awardRange": "$40M pool",
+    "cycle": "Annual \u2014 Aug deadline",
+    "eligibleOrgTypes": [
+      "govt"
+    ],
+    "eligibleProducts": [
+      "notification"
+    ],
+    "specificNeed": "",
+    "activeStates": [],
+    "url": "https://www.fema.gov/grants",
+    "strategyNotes": "Directly funds visual and audio alert infrastructure. LT notification screen is a documented fit. No competitor can claim this grant.",
+    "hasNarrativeTemplate": false,
+    "hasAcsEndorsement": false,
+    "isSupplemental": false,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "fema-emergency-management-performance-grant-empg",
+    "category": "Federal \u2014 FEMA / DHS",
+    "programName": "FEMA Emergency Management Performance Grant (EMPG)",
+    "agency": "FEMA",
+    "awardRange": "$319.5M pool",
+    "cycle": "Annual",
+    "eligibleOrgTypes": [
+      "govt"
+    ],
+    "eligibleProducts": [
+      "notification",
+      "bleeding",
+      "aed",
+      "training",
+      "firstaid"
+    ],
+    "specificNeed": "",
+    "activeStates": [],
+    "url": "https://www.fema.gov/grants/preparedness/emergency-management-performance",
+    "strategyNotes": "All-hazards preparedness. Communications infrastructure and emergency equipment both eligible.",
+    "hasNarrativeTemplate": false,
+    "hasAcsEndorsement": false,
+    "isSupplemental": false,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "nonprofit-security-grant-program-nsgp",
+    "category": "Federal \u2014 FEMA / DHS",
+    "programName": "Nonprofit Security Grant Program (NSGP)",
+    "agency": "FEMA / DHS",
+    "awardRange": "Up to $150K",
+    "cycle": "Annual \u2014 Spring",
+    "eligibleOrgTypes": [
+      "nonprofit",
+      "religious",
+      "higher-ed"
+    ],
+    "eligibleProducts": [
+      "bleeding",
+      "aed",
+      "camera",
+      "notification",
+      "firstaid",
+      "choking"
+    ],
+    "specificNeed": "",
+    "activeStates": [],
+    "url": "https://www.fema.gov/grants/preparedness/nonprofit-security",
+    "strategyNotes": "Security cameras, access control, and safety equipment. Strong fit for fully configured stations.",
+    "hasNarrativeTemplate": true,
+    "hasAcsEndorsement": false,
+    "isSupplemental": false,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "fema-targeted-violence-terrorism-prevention-tvtp",
+    "category": "Federal \u2014 FEMA / DHS",
+    "programName": "FEMA Targeted Violence & Terrorism Prevention (TVTP)",
+    "agency": "DHS",
+    "awardRange": "Up to $2M / $1M by category",
+    "cycle": "Annual \u2014 Fall",
+    "eligibleOrgTypes": [
+      "school",
+      "govt",
+      "nonprofit"
+    ],
+    "eligibleProducts": [
+      "notification",
+      "camera",
+      "training"
+    ],
+    "specificNeed": "",
+    "activeStates": [],
+    "url": "https://www.dhs.gov/tvtp",
+    "strategyNotes": "Security systems, training, emergency preparedness. 25% local match required.",
+    "hasNarrativeTemplate": false,
+    "hasAcsEndorsement": false,
+    "isSupplemental": false,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "urban-areas-security-initiative-uasi",
+    "category": "Federal \u2014 FEMA / DHS",
+    "programName": "Urban Areas Security Initiative (UASI)",
+    "agency": "DHS / FEMA",
+    "awardRange": "Varies by metro",
+    "cycle": "Annual",
+    "eligibleOrgTypes": [
+      "govt"
+    ],
+    "eligibleProducts": [
+      "bleeding",
+      "aed",
+      "notification",
+      "camera",
+      "firstaid"
+    ],
+    "specificNeed": "",
+    "activeStates": [],
+    "url": "https://www.fema.gov/grants/preparedness/urban-areas-security-initiative",
+    "strategyNotes": "Terrorism prevention and preparedness for high-risk metros.",
+    "hasNarrativeTemplate": false,
+    "hasAcsEndorsement": false,
+    "isSupplemental": false,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "cdc-injury-prevention-control",
+    "category": "Federal \u2014 Health",
+    "programName": "CDC Injury Prevention & Control",
+    "agency": "Centers for Disease Control",
+    "awardRange": "Varies",
+    "cycle": "Rolling",
+    "eligibleOrgTypes": [
+      "nonprofit",
+      "ems-health",
+      "govt",
+      "higher-ed",
+      "school"
+    ],
+    "eligibleProducts": [
+      "bleeding",
+      "training",
+      "firstaid",
+      "choking"
+    ],
+    "specificNeed": "",
+    "activeStates": [],
+    "url": "https://www.cdc.gov/injury/grants",
+    "strategyNotes": "Trauma preparedness and hemorrhage control. ACS endorsement is a documented differentiator.",
+    "hasNarrativeTemplate": false,
+    "hasAcsEndorsement": true,
+    "isSupplemental": false,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "samhsa-opioid-response-grants",
+    "category": "Federal \u2014 Health",
+    "programName": "SAMHSA Opioid Response Grants",
+    "agency": "SAMHSA",
+    "awardRange": "Up to $2M",
+    "cycle": "Annual",
+    "eligibleOrgTypes": [
+      "nonprofit",
+      "govt",
+      "ems-health",
+      "higher-ed",
+      "school"
+    ],
+    "eligibleProducts": [
+      "config",
+      "training"
+    ],
+    "specificNeed": "opioid",
+    "activeStates": [],
+    "url": "https://www.samhsa.gov/grants",
+    "strategyNotes": "Naloxone-ready cabinet compartment is a direct fit. Low competition in the equipment category.",
+    "hasNarrativeTemplate": true,
+    "hasAcsEndorsement": false,
+    "isSupplemental": false,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "hrsa-rural-health-care-grants",
+    "category": "Federal \u2014 Health",
+    "programName": "HRSA Rural Health Care Grants",
+    "agency": "HRSA",
+    "awardRange": "Varies",
+    "cycle": "Rolling",
+    "eligibleOrgTypes": [
+      "ems-health",
+      "nonprofit"
+    ],
+    "eligibleProducts": [
+      "bleeding",
+      "aed",
+      "firstaid",
+      "choking",
+      "training"
+    ],
+    "specificNeed": "",
+    "activeStates": [],
+    "url": "https://www.hrsa.gov/grants",
+    "strategyNotes": "Rural communities with long EMS response times. Full station makes a compelling need statement.",
+    "hasNarrativeTemplate": false,
+    "hasAcsEndorsement": false,
+    "isSupplemental": false,
+    "hasRuralBoost": true,
+    "lastVerified": ""
+  },
+  {
+    "id": "title-iv-a-student-support-academic-enrichment",
+    "category": "Federal \u2014 Education",
+    "programName": "Title IV-A Student Support & Academic Enrichment",
+    "agency": "U.S. Dept of Education",
+    "awardRange": "Formula-based per district",
+    "cycle": "Ongoing annual allotment",
+    "eligibleOrgTypes": [
+      "school"
+    ],
+    "eligibleProducts": [
+      "bleeding",
+      "aed",
+      "camera",
+      "notification",
+      "training",
+      "firstaid",
+      "choking"
+    ],
+    "specificNeed": "",
+    "activeStates": [],
+    "url": "https://oese.ed.gov/offices/office-of-formula-grants/student-support-academic-enrichment-grants/",
+    "strategyNotes": "Every school district already has access to this funding \u2014 no competitive application required.",
+    "hasNarrativeTemplate": true,
+    "hasAcsEndorsement": true,
+    "isSupplemental": false,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "osha-susan-harwood-training-grants",
+    "category": "Federal \u2014 Workplace",
+    "programName": "OSHA Susan Harwood Training Grants",
+    "agency": "Dept of Labor / OSHA",
+    "awardRange": "Up to $250K",
+    "cycle": "Annual",
+    "eligibleOrgTypes": [
+      "workplace",
+      "nonprofit",
+      "higher-ed"
+    ],
+    "eligibleProducts": [
+      "firstaid",
+      "training",
+      "bleeding",
+      "choking"
+    ],
+    "specificNeed": "",
+    "activeStates": [],
+    "url": "https://www.osha.gov/harwood-grant",
+    "strategyNotes": "Workplace safety training. Burn and eye wash pouch configurations align directly with program goals.",
+    "hasNarrativeTemplate": false,
+    "hasAcsEndorsement": false,
+    "isSupplemental": false,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "state-aed-grant-programs",
+    "category": "State Programs",
+    "programName": "State AED Grant Programs",
+    "agency": "State health departments",
+    "awardRange": "Up to $50K",
+    "cycle": "Varies by state",
+    "eligibleOrgTypes": [
+      "school",
+      "govt",
+      "nonprofit",
+      "ems-health"
+    ],
+    "eligibleProducts": [
+      "aed",
+      "training"
+    ],
+    "specificNeed": "",
+    "activeStates": [
+      "MN",
+      "CA",
+      "FL",
+      "TX",
+      "NY",
+      "IL",
+      "PA",
+      "OH",
+      "WA",
+      "CO",
+      "VA",
+      "GA",
+      "NC",
+      "AZ",
+      "NJ"
+    ],
+    "url": "",
+    "strategyNotes": "Every state has some form of AED grant. MN, CA, FL, TX, NY all active. Zoll brand carries weight with reviewers.",
+    "hasNarrativeTemplate": false,
+    "hasAcsEndorsement": false,
+    "isSupplemental": false,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "state-ems-trauma-system-grants",
+    "category": "State Programs",
+    "programName": "State EMS / Trauma System Grants",
+    "agency": "State health / EMS agencies",
+    "awardRange": "Varies by state",
+    "cycle": "Annual (state-specific)",
+    "eligibleOrgTypes": [
+      "ems-health",
+      "govt",
+      "nonprofit"
+    ],
+    "eligibleProducts": [
+      "bleeding",
+      "aed",
+      "training",
+      "firstaid",
+      "choking"
+    ],
+    "specificNeed": "",
+    "activeStates": [],
+    "url": "",
+    "strategyNotes": "Every state operates a trauma system grant. Bleeding control and AED are core eligible items.",
+    "hasNarrativeTemplate": false,
+    "hasAcsEndorsement": true,
+    "isSupplemental": false,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "state-school-safety-technology-grants",
+    "category": "State Programs",
+    "programName": "State School Safety Technology Grants",
+    "agency": "State education agencies",
+    "awardRange": "$275M (TX SAFE) / varies",
+    "cycle": "Annual (state-specific)",
+    "eligibleOrgTypes": [
+      "school"
+    ],
+    "eligibleProducts": [
+      "camera",
+      "notification",
+      "bleeding",
+      "aed",
+      "training"
+    ],
+    "specificNeed": "",
+    "activeStates": [
+      "TX",
+      "VA",
+      "CO",
+      "AL",
+      "GA",
+      "FL",
+      "OH",
+      "PA",
+      "NC",
+      "TN",
+      "MO",
+      "KY",
+      "IN",
+      "WI",
+      "MN"
+    ],
+    "url": "",
+    "strategyNotes": "TX SAFE, VA Security Equipment, CO SAFER, AL SB-98 all active. Camera and notification screen are explicit line items.",
+    "hasNarrativeTemplate": false,
+    "hasAcsEndorsement": false,
+    "isSupplemental": false,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "state-school-health-anaphylaxis-programs",
+    "category": "State Programs",
+    "programName": "State School Health / Anaphylaxis Programs",
+    "agency": "State education / health agencies",
+    "awardRange": "Varies by state",
+    "cycle": "Varies by state",
+    "eligibleOrgTypes": [
+      "school"
+    ],
+    "eligibleProducts": [
+      "config",
+      "training"
+    ],
+    "specificNeed": "epipen, asthma",
+    "activeStates": [
+      "CA",
+      "TX",
+      "FL",
+      "NY",
+      "IL",
+      "PA",
+      "OH",
+      "VA",
+      "GA",
+      "NC",
+      "NJ",
+      "MA",
+      "WA",
+      "CO",
+      "MN",
+      "AZ",
+      "TN",
+      "IN",
+      "MO",
+      "WI"
+    ],
+    "url": "",
+    "strategyNotes": "Mandatory EpiPen access laws with companion funding. Configurable pouch station is a direct compliance solution.",
+    "hasNarrativeTemplate": false,
+    "hasAcsEndorsement": false,
+    "isSupplemental": false,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "state-opioid-naloxone-access-programs",
+    "category": "State Programs",
+    "programName": "State Opioid / Naloxone Access Programs",
+    "agency": "State health departments",
+    "awardRange": "Varies widely",
+    "cycle": "Ongoing",
+    "eligibleOrgTypes": [
+      "school",
+      "nonprofit",
+      "govt",
+      "ems-health",
+      "higher-ed"
+    ],
+    "eligibleProducts": [
+      "config",
+      "training"
+    ],
+    "specificNeed": "opioid",
+    "activeStates": [],
+    "url": "",
+    "strategyNotes": "Station provides the infrastructure; health department fills the pouch. Station cost becomes the grant ask.",
+    "hasNarrativeTemplate": false,
+    "hasAcsEndorsement": false,
+    "isSupplemental": false,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "firehouse-subs-public-safety-foundation",
+    "category": "Private / Corporate Foundations",
+    "programName": "Firehouse Subs Public Safety Foundation",
+    "agency": "Corporate foundation",
+    "awardRange": "Up to $20K",
+    "cycle": "Rolling",
+    "eligibleOrgTypes": [
+      "ems-health",
+      "govt"
+    ],
+    "eligibleProducts": [
+      "bleeding",
+      "aed",
+      "training",
+      "firstaid"
+    ],
+    "specificNeed": "",
+    "activeStates": [],
+    "url": "https://firehousesubs.com/foundation",
+    "strategyNotes": "High success rate. Straightforward application. AED and trauma equipment both eligible.",
+    "hasNarrativeTemplate": false,
+    "hasAcsEndorsement": false,
+    "isSupplemental": true,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "aedgrant-com-corporate-buy-down-program",
+    "category": "Private / Corporate Foundations",
+    "programName": "AEDGrant.com Corporate Buy-Down Program",
+    "agency": "Corporate / private",
+    "awardRange": "Full AED cost",
+    "cycle": "Rolling",
+    "eligibleOrgTypes": [
+      "school",
+      "nonprofit",
+      "govt",
+      "workplace",
+      "higher-ed",
+      "parks-rec"
+    ],
+    "eligibleProducts": [
+      "aed"
+    ],
+    "specificNeed": "",
+    "activeStates": [],
+    "url": "https://www.aedgrant.com",
+    "strategyNotes": "Covers full Zoll AED cost for qualifying applicants. Good entry point for base station applications.",
+    "hasNarrativeTemplate": false,
+    "hasAcsEndorsement": false,
+    "isSupplemental": true,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "state-farm-good-neighbor-citizenship-grant",
+    "category": "Private / Corporate Foundations",
+    "programName": "State Farm Good Neighbor Citizenship Grant",
+    "agency": "State Farm Foundation",
+    "awardRange": "Up to $100K",
+    "cycle": "Annual",
+    "eligibleOrgTypes": [
+      "nonprofit",
+      "school"
+    ],
+    "eligibleProducts": [
+      "bleeding",
+      "aed",
+      "training",
+      "firstaid",
+      "choking"
+    ],
+    "specificNeed": "",
+    "activeStates": [],
+    "url": "https://www.statefarm.com/about-us/community-involvement/grants",
+    "strategyNotes": "Community safety and health. Equipment plus training bundle is a strong application.",
+    "hasNarrativeTemplate": false,
+    "hasAcsEndorsement": false,
+    "isSupplemental": false,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "walmart-community-grant",
+    "category": "Private / Corporate Foundations",
+    "programName": "Walmart Community Grant",
+    "agency": "Walmart Foundation",
+    "awardRange": "Up to $25K",
+    "cycle": "Rolling",
+    "eligibleOrgTypes": [
+      "nonprofit"
+    ],
+    "eligibleProducts": [
+      "bleeding",
+      "aed",
+      "firstaid",
+      "training"
+    ],
+    "specificNeed": "",
+    "activeStates": [],
+    "url": "https://walmart.org/how-we-give/local-community-grants",
+    "strategyNotes": "Community health and safety. Low barrier to entry. Good first grant application.",
+    "hasNarrativeTemplate": false,
+    "hasAcsEndorsement": false,
+    "isSupplemental": true,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  },
+  {
+    "id": "american-heart-association-heartsaver-program",
+    "category": "Private / Corporate Foundations",
+    "programName": "American Heart Association Heartsaver Program",
+    "agency": "AHA",
+    "awardRange": "Equipment + training support",
+    "cycle": "Rolling",
+    "eligibleOrgTypes": [
+      "school",
+      "nonprofit",
+      "workplace",
+      "higher-ed"
+    ],
+    "eligibleProducts": [
+      "aed",
+      "training",
+      "bleeding"
+    ],
+    "specificNeed": "",
+    "activeStates": [],
+    "url": "https://www.heart.org/en/professional/education/grants",
+    "strategyNotes": "AHA-endorsed CPR and AED training grants. Pairs naturally with Zoll AED and ACS bleeding control kits.",
+    "hasNarrativeTemplate": false,
+    "hasAcsEndorsement": false,
+    "isSupplemental": true,
+    "hasRuralBoost": false,
+    "lastVerified": ""
+  }
+]

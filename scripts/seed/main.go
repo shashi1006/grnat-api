@@ -34,6 +34,7 @@ func run() error {
 	defer pool.Close()
 
 	grantRepo := pgxrepo.NewGrantRepo(pool)
+	productRepo := pgxrepo.NewProductRepo(pool)
 	ctx := context.Background()
 
 	for _, g := range seedGrants {
@@ -48,6 +49,10 @@ func run() error {
 			continue
 		}
 		log.Printf("created: %s (%s)", created.Title, created.ID)
+	}
+
+	if err := seedFundingOS(ctx, productRepo, grantRepo); err != nil {
+		return err
 	}
 	return nil
 }

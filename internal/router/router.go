@@ -28,6 +28,7 @@ type Deps struct {
 	Lead        *handler.LeadHandler
 	Analytics   *handler.AnalyticsHandler
 	QuizDraft   *handler.QuizDraftHandler
+	Product     *handler.ProductHandler
 }
 
 // New builds and returns the configured Gin engine.
@@ -98,6 +99,10 @@ func New(deps Deps) *gin.Engine {
 			orgs.GET("/:id/profile", deps.Org.GetProfile)
 			orgs.PUT("/:id/profile", deps.Org.UpsertProfile)
 
+			// Preparedness solutions selection (Funding OS wizard)
+			orgs.GET("/:id/product-selection", deps.Product.ListProductSelections)
+			orgs.PUT("/:id/product-selection", deps.Product.SaveProductSelection)
+
 			// Applications scoped to org
 			orgs.POST("/:id/applications", deps.Application.CreateApplication)
 			orgs.GET("/:id/applications", deps.Application.ListApplications)
@@ -108,6 +113,13 @@ func New(deps Deps) *gin.Engine {
 			orgs.GET("/:id/grants/:grant_id/score", deps.Score.GetScore)
 			orgs.POST("/:id/grants/:grant_id/score", deps.Score.ComputeScore)
 			orgs.POST("/:id/grants/:grant_id/narratives", deps.Narr.GenerateNarrative)
+		}
+
+		// Preparedness solutions catalog (Funding OS wizard)
+		products := api.Group("/products")
+		{
+			products.GET("", deps.Product.ListProducts)
+			products.GET("/:id", deps.Product.GetProduct)
 		}
 
 		// Quiz draft

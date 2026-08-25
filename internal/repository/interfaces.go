@@ -180,6 +180,7 @@ type CreateGrantParams struct {
 	DifficultyLevel       domain.DifficultyLevel
 	CompetitionLevel      domain.CompetitionLevel
 	Tags                  []string
+	Metadata              map[string]interface{}
 	CreatedBy             *uuid.UUID
 }
 
@@ -190,6 +191,7 @@ type UpdateGrantParams struct {
 	Synopsis    *string
 	Status      *string
 	Deadline    *string
+	Metadata    map[string]interface{}
 }
 
 type GrantWithDistance struct {
@@ -425,4 +427,42 @@ type PlatformStats struct {
 	ActiveGrants      int64 `json:"active_grants"`
 	TotalLeads        int64 `json:"total_leads"`
 	TotalApplications int64 `json:"total_applications"`
+}
+
+// --- Products (Funding OS solutions catalog) ---
+
+type ProductRepo interface {
+	List(ctx context.Context) ([]*domain.Product, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*domain.Product, error)
+	GetBySlug(ctx context.Context, slug string) (*domain.Product, error)
+	Create(ctx context.Context, params CreateProductParams) (*domain.Product, error)
+
+	SaveSelection(ctx context.Context, params SaveSelectionParams) (*domain.OrgProductSelection, error)
+	ListSelections(ctx context.Context, orgID uuid.UUID) ([]*domain.OrgProductSelection, error)
+	DeleteSelection(ctx context.Context, orgID, productID uuid.UUID) error
+}
+
+type CreateProductParams struct {
+	Slug             string
+	Name             string
+	Category         *string
+	ShortDesc        *string
+	Description      *string
+	SelectionType    *string
+	PriceCents       int64
+	PriceType        string
+	Featured         bool
+	FundingAlignment []string
+	Catalog          []byte
+	SortOrder        int32
+}
+
+type SaveSelectionParams struct {
+	OrgID           uuid.UUID
+	ProductID       uuid.UUID
+	ConfigurationID *string
+	SelectedAddons  []string
+	Quantity        int32
+	UnitPriceCents  int64
+	SubtotalCents   int64
 }

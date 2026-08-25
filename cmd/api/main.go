@@ -73,6 +73,7 @@ func main() {
 	appRepo := pgxrepo.NewApplicationRepo(pool)
 	leadRepo := pgxrepo.NewLeadRepo(pool)
 	analyticsRepo := pgxrepo.NewAnalyticsRepo(pool)
+	productRepo := pgxrepo.NewProductRepo(pool)
 
 	// --- AI ---
 	embedSvc := embedding.NewService(cfg.Embedding.OpenAIKey, cfg.Embedding.Model, cfg.Embedding.Dimensions)
@@ -97,6 +98,7 @@ func main() {
 	appSvc := service.NewApplicationService(appRepo, grantRepo, scoreRepo)
 	leadSvc := service.NewLeadService(leadRepo)
 	analyticsSvc := service.NewAnalyticsService(analyticsRepo)
+	productSvc := service.NewProductService(productRepo)
 
 	var narrativeSvc *service.NarrativeService
 	if claudeClient != nil {
@@ -116,6 +118,7 @@ func main() {
 		Lead:        handler.NewLeadHandler(leadSvc),
 		Analytics:   handler.NewAnalyticsHandler(analyticsSvc),
 		QuizDraft:   handler.NewQuizDraftHandler(userRepo),
+		Product:     handler.NewProductHandler(productSvc),
 	})
 
 	// --- HTTP Server ---
