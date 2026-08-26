@@ -2,10 +2,12 @@ package pgxrepo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/readygeneration/readygeneration-backend/internal/domain"
 	"github.com/readygeneration/readygeneration-backend/internal/repository"
@@ -25,10 +27,10 @@ const userCols = `id, email, password_hash, first_name, last_name, phone, avatar
                   created_at, updated_at`
 
 func (r *userRepo) Create(ctx context.Context, p repository.CreateUserParams) (*domain.User, error) {
-	const q = `INSERT INTO users (email, password_hash, first_name, last_name, phone, role, auth_provider)
-	           VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING ` + userCols
+	const q = `INSERT INTO users (email, password_hash, first_name, last_name, phone, google_sub, role, auth_provider)
+	           VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING ` + userCols
 	return scanUser(r.db.QueryRow(ctx, q,
-		p.Email, p.PasswordHash, p.FirstName, p.LastName, p.Phone,
+		p.Email, p.PasswordHash, p.FirstName, p.LastName, p.Phone, p.GoogleSub,
 		string(p.Role), string(p.AuthProvider),
 	))
 }
@@ -231,6 +233,9 @@ func scanUser(row scannable) (*domain.User, error) {
 		&u.CreatedAt, &u.UpdatedAt,
 	)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, repository.ErrNotFound
+		}
 		return nil, fmt.Errorf("scan user: %w", err)
 	}
 	u.Role = domain.UserRole(role)

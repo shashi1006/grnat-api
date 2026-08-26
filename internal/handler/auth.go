@@ -97,6 +97,32 @@ func (h *AuthHandler) Me(c *gin.Context) {
 	response.OK(c, user)
 }
 
+type googleRequest struct {
+	IDToken string `json:"id_token" binding:"required"`
+}
+
+// Google godoc
+// @Summary      Authenticate with a Firebase Google ID token
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        body body googleRequest true "Google ID token"
+// @Success      200  {object} response.Envelope
+// @Router       /auth/google [post]
+func (h *AuthHandler) Google(c *gin.Context) {
+	var req googleRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+	result, err := h.authSvc.GoogleLogin(c.Request.Context(), service.GoogleLoginRequest{IDToken: req.IDToken})
+	if err != nil {
+		response.Unauthorized(c, err.Error())
+		return
+	}
+	response.OK(c, gin.H{"token": result.Token, "user": result.User})
+}
+
 // ChangePassword godoc
 // @Summary      Change the authenticated user's password
 // @Tags         auth

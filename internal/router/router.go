@@ -69,6 +69,7 @@ func New(deps Deps) *gin.Engine {
 	{
 		pub.POST("/auth/signup", deps.Auth.Signup)
 		pub.POST("/auth/login", deps.Auth.Login)
+		pub.POST("/auth/google", deps.Auth.Google)
 		pub.POST("/auth/reset-password", deps.Auth.ResetPassword)
 		pub.POST("/leads", deps.Lead.CaptureLead) // quiz / landing page capture
 	}

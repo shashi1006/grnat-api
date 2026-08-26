@@ -2,10 +2,14 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 	"github.com/readygeneration/readygeneration-backend/internal/domain"
 )
+
+// ErrNotFound indicates a requested record does not exist.
+var ErrNotFound = errors.New("not found")
 
 // --- Organization ---
 
@@ -98,6 +102,7 @@ type CreateUserParams struct {
 	FirstName    *string
 	LastName     *string
 	Phone        *string
+	GoogleSub    *string
 	Role         domain.UserRole
 	AuthProvider domain.AuthProvider
 }

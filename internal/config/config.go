@@ -16,8 +16,13 @@ type Config struct {
 	JWT       JWTConfig
 	Claude    ClaudeConfig
 	Embedding EmbeddingConfig
+	Firebase  FirebaseConfig
 	CORS      CORSConfig
 	RateLimit RateLimitConfig
+}
+
+type FirebaseConfig struct {
+	WebAPIKey string
 }
 
 type AppConfig struct {
@@ -114,6 +119,9 @@ func Load() (*Config, error) {
 	// CORS defaults
 	v.SetDefault("cors.allowed_origins", "http://localhost:3000,https://readygeneration.com")
 
+	// Firebase defaults
+	v.SetDefault("firebase.web_api_key", "")
+
 	// Rate limit defaults
 	v.SetDefault("rate_limit.requests_per_minute", 60)
 	v.SetDefault("rate_limit.burst_size", 10)
@@ -199,6 +207,9 @@ func Load() (*Config, error) {
 			Model:      v.GetString("claude.embedding_model"),
 			Dimensions: v.GetInt("embedding.dimensions"),
 			BatchSize:  v.GetInt("embedding.batch_size"),
+		},
+		Firebase: FirebaseConfig{
+			WebAPIKey: v.GetString("FIREBASE_API_KEY"),
 		},
 		CORS: CORSConfig{
 			AllowedOrigins: origins,
