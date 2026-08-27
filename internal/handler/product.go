@@ -72,6 +72,40 @@ func (h *ProductHandler) SaveProductSelection(c *gin.Context) {
 		response.BadRequest(c, "invalid org id")
 		return
 	}
+
+	// Try batch format first: { "selections": [...] }
+	var batch struct {
+		Selections []saveSelectionRequest `json:"selections"`
+	}
+	if err := c.ShouldBindJSON(&batch); err == nil && len(batch.Selections) > 0 {
+		var saved []interface{}
+		for _, req := range batch.Selections {
+			productID, err := uuid.Parse(req.ProductID)
+			if err != nil {
+				continue // skip invalid product_ids
+			}
+			quantity := req.Quantity
+			if quantity <= 0 {
+				quantity = 1
+			}
+			selection, err := h.svc.SaveSelection(c.Request.Context(), repository.SaveSelectionParams{
+				OrgID:           orgID,
+				ProductID:       productID,
+				ConfigurationID: req.ConfigurationID,
+				SelectedAddons:  req.SelectedAddons,
+				Quantity:        quantity,
+				UnitPriceCents:  req.UnitPriceCents,
+				SubtotalCents:   req.SubtotalCents,
+			})
+			if err == nil {
+				saved = append(saved, selection)
+			}
+		}
+		response.OK(c, saved)
+		return
+	}
+
+	// Fall back to single selection format
 	var req saveSelectionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())

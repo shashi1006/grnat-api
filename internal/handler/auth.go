@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/readygeneration/readygeneration-backend/internal/domain"
 	"github.com/readygeneration/readygeneration-backend/internal/middleware"
 	"github.com/readygeneration/readygeneration-backend/internal/repository"
 	"github.com/readygeneration/readygeneration-backend/internal/service"
@@ -19,6 +21,28 @@ type AuthHandler struct {
 // NewAuthHandler creates an AuthHandler.
 func NewAuthHandler(authSvc *service.AuthService, users repository.UserRepo) *AuthHandler {
 	return &AuthHandler{authSvc: authSvc, users: users}
+}
+
+// userWithOrg builds a user response map that includes the user's org_id.
+func (h *AuthHandler) userWithOrg(ctx context.Context, user *domain.User) gin.H {
+	orgID := ""
+	orgs, err := h.users.ListUserOrgs(ctx, user.ID)
+	if err == nil && len(orgs) > 0 {
+		orgID = orgs[0].ID.String()
+	}
+	return gin.H{
+		"id":             user.ID,
+		"email":          user.Email,
+		"first_name":     user.FirstName,
+		"last_name":      user.LastName,
+		"role":           user.Role,
+		"auth_provider":  user.AuthProvider,
+		"email_verified": user.EmailVerified,
+		"is_active":      user.IsActive,
+		"org_id":         orgID,
+		"created_at":     user.CreatedAt,
+		"updated_at":     user.UpdatedAt,
+	}
 }
 
 // Signup godoc
@@ -47,7 +71,7 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, response.Envelope{
 		Success: true,
-		Data:    gin.H{"token": result.Token, "user": result.User},
+		Data:    gin.H{"token": result.Token, "user": h.userWithOrg(c.Request.Context(), result.User)},
 	})
 }
 
@@ -73,7 +97,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		response.Unauthorized(c, err.Error())
 		return
 	}
-	response.OK(c, gin.H{"token": result.Token, "user": result.User})
+	response.OK(c, gin.H{"token": result.Token, "user": h.userWithOrg(c.Request.Context(), result.User)})
 }
 
 // Me godoc
@@ -94,7 +118,7 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		response.NotFound(c, "user not found")
 		return
 	}
-	response.OK(c, user)
+	response.OK(c, h.userWithOrg(c.Request.Context(), user))
 }
 
 type googleRequest struct {
@@ -120,7 +144,7 @@ func (h *AuthHandler) Google(c *gin.Context) {
 		response.Unauthorized(c, err.Error())
 		return
 	}
-	response.OK(c, gin.H{"token": result.Token, "user": result.User})
+	response.OK(c, gin.H{"token": result.Token, "user": h.userWithOrg(c.Request.Context(), result.User)})
 }
 
 // ChangePassword godoc

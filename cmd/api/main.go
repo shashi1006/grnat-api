@@ -113,7 +113,7 @@ func main() {
 		Grant:       handler.NewGrantHandler(grantSvc),
 		Score:       handler.NewScoringHandler(scoringSvc),
 		Narr:        handler.NewNarrativeHandler(narrativeSvc),
-		Org:         handler.NewOrgHandler(orgSvc),
+		Org:         handler.NewOrgHandler(orgSvc, userRepo),
 		Application: handler.NewApplicationHandler(appSvc),
 		Lead:        handler.NewLeadHandler(leadSvc),
 		Analytics:   handler.NewAnalyticsHandler(analyticsSvc),

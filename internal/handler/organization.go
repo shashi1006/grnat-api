@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/readygeneration/readygeneration-backend/internal/domain"
+	"github.com/readygeneration/readygeneration-backend/internal/middleware"
 	"github.com/readygeneration/readygeneration-backend/internal/repository"
 	"github.com/readygeneration/readygeneration-backend/internal/service"
 	"github.com/readygeneration/readygeneration-backend/pkg/response"
@@ -12,11 +13,12 @@ import (
 // OrgHandler handles organization CRUD and profile endpoints.
 type OrgHandler struct {
 	orgSvc *service.OrgService
+	users  repository.UserRepo
 }
 
 // NewOrgHandler creates an OrgHandler.
-func NewOrgHandler(orgSvc *service.OrgService) *OrgHandler {
-	return &OrgHandler{orgSvc: orgSvc}
+func NewOrgHandler(orgSvc *service.OrgService, users repository.UserRepo) *OrgHandler {
+	return &OrgHandler{orgSvc: orgSvc, users: users}
 }
 
 // CreateOrg godoc
@@ -50,6 +52,10 @@ func (h *OrgHandler) CreateOrg(c *gin.Context) {
 	if err != nil {
 		response.InternalError(c, err)
 		return
+	}
+	// Link the creating user as an admin member of the org
+	if userID, ok := middleware.GetUserID(c); ok {
+		_, _ = h.users.AddOrgMember(c.Request.Context(), org.ID, userID, domain.RoleAdmin, nil)
 	}
 	response.Created(c, org)
 }

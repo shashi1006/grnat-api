@@ -28,6 +28,17 @@ func (s *OrgService) CreateOrg(ctx context.Context, params repository.CreateOrgP
 		return nil, fmt.Errorf("create org: %w", err)
 	}
 
+	// Create a default empty profile so scoring works immediately
+	emptyStr := ""
+	_, _ = s.orgs.UpsertProfile(ctx, repository.UpsertProfileParams{
+		OrgID:             org.ID,
+		PopulationsServed: []string{},
+		ServiceAreas:      []string{},
+		ProgramAreas:      []string{},
+		FocusIssues:       []string{},
+		Narrative:         &emptyStr,
+	})
+
 	// Generate embedding best-effort in background
 	go func() {
 		text := org.Name

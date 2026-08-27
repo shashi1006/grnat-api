@@ -12,10 +12,10 @@ import (
 
 // ScoringService orchestrates compatibility scoring between orgs and grants.
 type ScoringService struct {
-	orgs    repository.OrganizationRepo
-	grants  repository.GrantRepo
-	scores  repository.ScoringRepo
-	engine  *scoring.Engine
+	orgs   repository.OrganizationRepo
+	grants repository.GrantRepo
+	scores repository.ScoringRepo
+	engine *scoring.Engine
 }
 
 // NewScoringService creates a ScoringService.
@@ -36,7 +36,8 @@ func (s *ScoringService) ComputeScore(ctx context.Context, orgID, grantID uuid.U
 	}
 	profile, err := s.orgs.GetProfile(ctx, orgID)
 	if err != nil {
-		return nil, fmt.Errorf("get org profile: %w", err)
+		// Use a default empty profile if none exists yet
+		profile = &domain.OrganizationProfile{OrgID: orgID}
 	}
 	grant, err := s.grants.GetByID(ctx, grantID)
 	if err != nil {
@@ -77,7 +78,8 @@ func (s *ScoringService) ComputeAllGrantsForOrg(ctx context.Context, orgID uuid.
 	}
 	profile, err := s.orgs.GetProfile(ctx, orgID)
 	if err != nil {
-		return 0, fmt.Errorf("get org profile: %w", err)
+		// Use a default empty profile if none exists yet
+		profile = &domain.OrganizationProfile{OrgID: orgID}
 	}
 
 	// Load all active grants in pages

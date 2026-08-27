@@ -40,6 +40,9 @@ func (e *Engine) Compute(input domain.ScoringInput) domain.ScoringResult {
 		result.Disqualified = true
 		result.DisqualifyReasons = reasons
 		result.Tier = domain.TierNoMatch
+		result.Strengths = []string{}
+		result.Gaps = []string{}
+		result.Recommendations = []string{}
 		return result
 	}
 
