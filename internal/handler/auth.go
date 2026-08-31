@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/readygeneration/readygeneration-backend/internal/domain"
 	"github.com/readygeneration/readygeneration-backend/internal/middleware"
 	"github.com/readygeneration/readygeneration-backend/internal/repository"
@@ -123,6 +124,73 @@ func (h *AuthHandler) Me(c *gin.Context) {
 
 type googleRequest struct {
 	IDToken string `json:"id_token" binding:"required"`
+}
+
+type listUsersParams struct {
+	Limit  int `form:"limit,default=50"`
+	Offset int `form:"offset,default=0"`
+}
+
+type updateUserRoleRequest struct {
+	Role string `json:"role" binding:"required,oneof=user admin superadmin"`
+}
+
+// ListUsers godoc
+// @Summary      List users (admin only)
+// @Tags         admin
+// @Security     BearerAuth
+// @Produce      json
+// @Success      200  {object}  response.Envelope
+// @Router       /admin/users [get]
+func (h *AuthHandler) ListUsers(c *gin.Context) {
+	var q listUsersParams
+	if err := c.ShouldBindQuery(&q); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+	users, err := h.users.List(c.Request.Context(), q.Limit, q.Offset)
+	if err != nil {
+		response.InternalError(c, err)
+		return
+	}
+	items := make([]gin.H, 0, len(users))
+	for _, u := range users {
+		items = append(items, h.userWithOrg(c.Request.Context(), u))
+	}
+	response.OK(c, gin.H{"users": items, "total": len(items)})
+}
+
+// UpdateUserRole godoc
+// @Summary      Update a user's platform role (admin only)
+// @Tags         admin
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        id   path  string  true  "User ID"
+// @Param        body body  updateUserRoleRequest true  "New role"
+// @Success      200  {object}  response.Envelope
+// @Router       /admin/users/{id}/role [patch]
+func (h *AuthHandler) UpdateUserRole(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "invalid user id")
+		return
+	}
+	var req updateUserRoleRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+	if err := h.users.UpdateRole(c.Request.Context(), id, domain.UserRole(req.Role)); err != nil {
+		response.InternalError(c, err)
+		return
+	}
+	user, err := h.users.GetByID(c.Request.Context(), id)
+	if err != nil {
+		response.InternalError(c, err)
+		return
+	}
+	response.OK(c, h.userWithOrg(c.Request.Context(), user))
 }
 
 // Google godoc

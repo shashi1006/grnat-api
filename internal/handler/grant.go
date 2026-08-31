@@ -231,12 +231,27 @@ func (h *GrantHandler) UpdateGrant(c *gin.Context) {
 		return
 	}
 	grant, err := h.grantSvc.UpdateGrant(c.Request.Context(), repository.UpdateGrantParams{
-		ID:          id,
-		Title:       req.Title,
-		Description: req.Description,
-		Synopsis:    req.Synopsis,
-		Status:      req.Status,
-		Deadline:    req.Deadline,
+		ID:                    id,
+		Title:                 req.Title,
+		FunderName:            req.FunderName,
+		FunderType:            req.FunderType,
+		Agency:                req.Agency,
+		Description:           req.Description,
+		Synopsis:              req.Synopsis,
+		Category:              req.Category,
+		FocusAreas:            req.FocusAreas,
+		EligibleOrgTypes:      req.EligibleOrgTypes,
+		EligibleStates:        req.EligibleStates,
+		MinAwardAmount:        req.MinAwardAmount,
+		MaxAwardAmount:        req.MaxAwardAmount,
+		TotalFundingAvailable: req.TotalFundingAvailable,
+		ApplicationURL:        req.ApplicationURL,
+		Status:                req.Status,
+		Deadline:              req.Deadline,
+		OpenDate:              req.OpenDate,
+		DifficultyLevel:       req.DifficultyLevel,
+		CompetitionLevel:      req.CompetitionLevel,
+		Tags:                  req.Tags,
 	})
 	if err != nil {
 		response.InternalError(c, err)
@@ -277,11 +292,26 @@ type createGrantRequest struct {
 }
 
 type updateGrantRequest struct {
-	Title       *string `json:"title"`
-	Description *string `json:"description"`
-	Synopsis    *string `json:"synopsis"`
-	Status      *string `json:"status"`
-	Deadline    *string `json:"deadline"`
+	Title                 *string                  `json:"title"`
+	FunderName            *string                  `json:"funder_name"`
+	FunderType            *domain.FunderType       `json:"funder_type"`
+	Agency                *string                  `json:"agency"`
+	Description           *string                  `json:"description"`
+	Synopsis              *string                  `json:"synopsis"`
+	Category              *string                  `json:"category"`
+	FocusAreas            []string                 `json:"focus_areas"`
+	EligibleOrgTypes      []string                 `json:"eligible_org_types"`
+	EligibleStates        []string                 `json:"eligible_states"`
+	MinAwardAmount        *int64                   `json:"min_award_amount"`
+	MaxAwardAmount        *int64                   `json:"max_award_amount"`
+	TotalFundingAvailable *int64                   `json:"total_funding_available"`
+	ApplicationURL        *string                  `json:"application_url"`
+	Status                *domain.GrantStatus      `json:"status"`
+	Deadline              *string                  `json:"deadline"`
+	OpenDate              *string                  `json:"open_date"`
+	DifficultyLevel       *domain.DifficultyLevel  `json:"difficulty_level"`
+	CompetitionLevel      *domain.CompetitionLevel `json:"competition_level"`
+	Tags                  []string                 `json:"tags"`
 }
 
 type ingestNOFORequest struct {

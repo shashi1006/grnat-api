@@ -44,16 +44,45 @@ func (r *grantRepo) Create(ctx context.Context, p repository.CreateGrantParams) 
 		t, _ := time.Parse("2006-01-02", *p.OpenDate)
 		openDate = &t
 	}
+	// Default nil slices to empty arrays to satisfy NOT NULL constraints
+	focusAreas := defaultEmpty(p.FocusAreas)
+	eligibleOrgTypes := defaultEmpty(p.EligibleOrgTypes)
+	eligiblePopulations := defaultEmpty(p.EligiblePopulations)
+	eligibleStates := defaultEmpty(p.EligibleStates)
+	tags := defaultEmpty(p.Tags)
+	metadata := p.Metadata
+	if metadata == nil {
+		metadata = map[string]interface{}{}
+	}
+	status := p.Status
+	if status == "" {
+		status = domain.GrantStatusActive
+	}
+	difficulty := p.DifficultyLevel
+	if difficulty == "" {
+		difficulty = domain.DifficultyMedium
+	}
+	competition := p.CompetitionLevel
+	if competition == "" {
+		competition = domain.CompetitionMedium
+	}
 	row := r.db.QueryRow(ctx, q,
 		p.Slug, p.Title, p.FunderName, string(p.FunderType), p.ProgramNumber,
 		p.OpportunityNumber, p.Agency, p.Description, p.Synopsis, p.Category,
-		p.FocusAreas, p.EligibleOrgTypes, p.EligiblePopulations, p.EligibleStates,
+		focusAreas, eligibleOrgTypes, eligiblePopulations, eligibleStates,
 		p.Requires501c3, p.RequiresAuditedFin, p.RequiresMatch, p.MatchPercentage,
 		p.MinAwardAmount, p.MaxAwardAmount, p.TotalFundingAvailable,
-		p.ApplicationURL, string(p.Status), deadline, openDate,
-		string(p.DifficultyLevel), string(p.CompetitionLevel), p.Tags, p.Metadata, p.CreatedBy,
+		p.ApplicationURL, string(status), deadline, openDate,
+		string(difficulty), string(competition), tags, metadata, p.CreatedBy,
 	)
 	return scanGrant(row)
+}
+
+func defaultEmpty(s []string) []string {
+	if s == nil {
+		return []string{}
+	}
+	return s
 }
 
 func (r *grantRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.Grant, error) {
@@ -106,14 +135,53 @@ func (r *grantRepo) Search(ctx context.Context, query string, limit, offset int3
 func (r *grantRepo) Update(ctx context.Context, p repository.UpdateGrantParams) (*domain.Grant, error) {
 	const q = `
 		UPDATE grants
-		SET title       = COALESCE($2, title),
-		    description = COALESCE($3, description),
-		    synopsis    = COALESCE($4, synopsis),
-		    status      = COALESCE($5, status),
-		    metadata    = COALESCE($6, metadata),
-		    updated_at  = NOW()
+		SET title                   = COALESCE($2, title),
+		    funder_name             = COALESCE($3, funder_name),
+		    funder_type             = COALESCE($4, funder_type),
+		    agency                  = COALESCE($5, agency),
+		    description             = COALESCE($6, description),
+		    synopsis                = COALESCE($7, synopsis),
+		    category                = COALESCE($8, category),
+		    focus_areas             = COALESCE($9, focus_areas),
+		    eligible_org_types      = COALESCE($10, eligible_org_types),
+		    eligible_states         = COALESCE($11, eligible_states),
+		    min_award_amount        = COALESCE($12, min_award_amount),
+		    max_award_amount        = COALESCE($13, max_award_amount),
+		    total_funding_available = COALESCE($14, total_funding_available),
+		    application_url         = COALESCE($15, application_url),
+		    status                  = COALESCE($16, status),
+		    deadline                = COALESCE($17, deadline),
+		    open_date               = COALESCE($18, open_date),
+		    difficulty_level        = COALESCE($19, difficulty_level),
+		    competition_level       = COALESCE($20, competition_level),
+		    tags                    = COALESCE($21, tags),
+		    metadata                = COALESCE($22, metadata),
+		    updated_at              = NOW()
 		WHERE id=$1 RETURNING *`
-	return scanGrant(r.db.QueryRow(ctx, q, p.ID, p.Title, p.Description, p.Synopsis, p.Status, p.Metadata))
+	return scanGrant(r.db.QueryRow(ctx, q,
+		p.ID,
+		p.Title,
+		p.FunderName,
+		p.FunderType,
+		p.Agency,
+		p.Description,
+		p.Synopsis,
+		p.Category,
+		p.FocusAreas,
+		p.EligibleOrgTypes,
+		p.EligibleStates,
+		p.MinAwardAmount,
+		p.MaxAwardAmount,
+		p.TotalFundingAvailable,
+		p.ApplicationURL,
+		p.Status,
+		p.Deadline,
+		p.OpenDate,
+		p.DifficultyLevel,
+		p.CompetitionLevel,
+		p.Tags,
+		p.Metadata,
+	))
 }
 
 func (r *grantRepo) UpdateEmbedding(ctx context.Context, id uuid.UUID, embedding []float32) error {

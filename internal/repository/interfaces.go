@@ -75,10 +75,12 @@ type UpsertProfileParams struct {
 
 type UserRepo interface {
 	Create(ctx context.Context, params CreateUserParams) (*domain.User, error)
+	List(ctx context.Context, limit, offset int) ([]*domain.User, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
 	GetByEmail(ctx context.Context, email string) (*domain.User, error)
 	GetByGoogleSub(ctx context.Context, sub string) (*domain.User, error)
 	Update(ctx context.Context, params UpdateUserParams) (*domain.User, error)
+	UpdateRole(ctx context.Context, id uuid.UUID, role domain.UserRole) error
 	UpdatePassword(ctx context.Context, id uuid.UUID, hash string) error
 	AttachGoogleSub(ctx context.Context, id uuid.UUID, sub string) error
 	UpdateLastLogin(ctx context.Context, id uuid.UUID) error
@@ -190,13 +192,28 @@ type CreateGrantParams struct {
 }
 
 type UpdateGrantParams struct {
-	ID          uuid.UUID
-	Title       *string
-	Description *string
-	Synopsis    *string
-	Status      *string
-	Deadline    *string
-	Metadata    map[string]interface{}
+	ID                    uuid.UUID
+	Title                 *string
+	FunderName            *string
+	FunderType            *domain.FunderType
+	Agency                *string
+	Description           *string
+	Synopsis              *string
+	Category              *string
+	FocusAreas            []string
+	EligibleOrgTypes      []string
+	EligibleStates        []string
+	MinAwardAmount        *int64
+	MaxAwardAmount        *int64
+	TotalFundingAvailable *int64
+	ApplicationURL        *string
+	Status                *domain.GrantStatus
+	Deadline              *string
+	OpenDate              *string
+	DifficultyLevel       *domain.DifficultyLevel
+	CompetitionLevel      *domain.CompetitionLevel
+	Tags                  []string
+	Metadata              map[string]interface{}
 }
 
 type GrantWithDistance struct {

@@ -162,6 +162,10 @@ func New(deps Deps) *gin.Engine {
 
 		// Platform analytics
 		admin.GET("/stats", deps.Analytics.GetPlatformStats)
+
+		// User management
+		admin.GET("/users", deps.Auth.ListUsers)
+		admin.PATCH("/users/:id/role", deps.Auth.UpdateUserRole)
 	}
 
 	return r

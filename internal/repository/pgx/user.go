@@ -74,6 +74,33 @@ func (r *userRepo) Deactivate(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+func (r *userRepo) List(ctx context.Context, limit, offset int) ([]*domain.User, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	rows, err := r.db.Query(ctx,
+		`SELECT `+userCols+` FROM users WHERE is_active=TRUE ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
+		limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []*domain.User
+	for rows.Next() {
+		u, err := scanUser(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, u)
+	}
+	return out, rows.Err()
+}
+
+func (r *userRepo) UpdateRole(ctx context.Context, id uuid.UUID, role domain.UserRole) error {
+	_, err := r.db.Exec(ctx, `UPDATE users SET role=$2, updated_at=NOW() WHERE id=$1`, id, string(role))
+	return err
+}
+
 func (r *userRepo) CreatePasswordResetToken(ctx context.Context, userID uuid.UUID, tokenHash string, ttlSeconds int) error {
 	expiresAt := time.Now().Add(time.Duration(ttlSeconds) * time.Second)
 	_, err := r.db.Exec(ctx,
