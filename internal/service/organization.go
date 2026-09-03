@@ -54,6 +54,11 @@ func (s *OrgService) CreateOrg(ctx context.Context, params repository.CreateOrgP
 	return org, nil
 }
 
+// ListOrgs returns a paginated list of all organizations.
+func (s *OrgService) ListOrgs(ctx context.Context, limit, offset int32) ([]*domain.Organization, error) {
+	return s.orgs.List(ctx, limit, offset)
+}
+
 // GetOrg retrieves an org by ID.
 func (s *OrgService) GetOrg(ctx context.Context, id uuid.UUID) (*domain.Organization, error) {
 	org, err := s.orgs.GetByID(ctx, id)

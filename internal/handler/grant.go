@@ -2,6 +2,7 @@ package handler
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -32,7 +33,12 @@ func NewGrantHandler(grantSvc *service.GrantService) *GrantHandler {
 // @Router       /grants [get]
 func (h *GrantHandler) ListGrants(c *gin.Context) {
 	limit, offset := parsePagination(c)
-	grants, err := h.grantSvc.ListGrants(c.Request.Context(), nil, int32(limit), int32(offset))
+	statusParam := c.Query("status")
+	var statuses []string
+	if statusParam != "" {
+		statuses = strings.Split(statusParam, ",")
+	}
+	grants, err := h.grantSvc.ListGrants(c.Request.Context(), statuses, int32(limit), int32(offset))
 	if err != nil {
 		response.InternalError(c, err)
 		return

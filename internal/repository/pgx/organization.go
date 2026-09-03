@@ -38,7 +38,7 @@ func (r *organizationRepo) Create(ctx context.Context, p repository.CreateOrgPar
 func (r *organizationRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.Organization, error) {
 	const q = `SELECT id, name, slug, ein, org_type, mission, address_line1, address_line2,
 	                  city, state, zip, county, website, phone, logo_url, plan, plan_expires_at,
-	                  is_active, created_at, updated_at
+	                  is_active, created_at, updated_at, NULL as owner_email
 	           FROM organizations WHERE id = $1 AND is_active = TRUE`
 	return scanOrg(r.db.QueryRow(ctx, q, id))
 }
@@ -46,17 +46,21 @@ func (r *organizationRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.O
 func (r *organizationRepo) GetBySlug(ctx context.Context, slug string) (*domain.Organization, error) {
 	const q = `SELECT id, name, slug, ein, org_type, mission, address_line1, address_line2,
 	                  city, state, zip, county, website, phone, logo_url, plan, plan_expires_at,
-	                  is_active, created_at, updated_at
+	                  is_active, created_at, updated_at, NULL as owner_email
 	           FROM organizations WHERE slug = $1 AND is_active = TRUE`
 	return scanOrg(r.db.QueryRow(ctx, q, slug))
 }
 
 func (r *organizationRepo) List(ctx context.Context, limit, offset int32) ([]*domain.Organization, error) {
-	const q = `SELECT id, name, slug, ein, org_type, mission, address_line1, address_line2,
-	                  city, state, zip, county, website, phone, logo_url, plan, plan_expires_at,
-	                  is_active, created_at, updated_at
-	           FROM organizations WHERE is_active = TRUE
-	           ORDER BY created_at DESC LIMIT $1 OFFSET $2`
+	const q = `SELECT o.id, o.name, o.slug, o.ein, o.org_type, o.mission, o.address_line1, o.address_line2,
+	                  o.city, o.state, o.zip, o.county, o.website, o.phone, o.logo_url, o.plan, o.plan_expires_at,
+	                  o.is_active, o.created_at, o.updated_at,
+	                  (SELECT u.email FROM organization_members om
+	                   JOIN users u ON u.id = om.user_id
+	                   WHERE om.org_id = o.id AND (om.role = 'owner' OR om.role = 'admin')
+	                   ORDER BY om.role, om.created_at ASC LIMIT 1) as owner_email
+	           FROM organizations o WHERE o.is_active = TRUE
+	           ORDER BY o.created_at DESC LIMIT $1 OFFSET $2`
 	rows, err := r.db.Query(ctx, q, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("list organizations: %w", err)
@@ -77,20 +81,21 @@ func (r *organizationRepo) Update(ctx context.Context, p repository.UpdateOrgPar
 	const q = `
 		UPDATE organizations
 		SET name       = COALESCE($2, name),
-		    mission    = COALESCE($3, mission),
-		    city       = COALESCE($4, city),
-		    state      = COALESCE($5, state),
-		    zip        = COALESCE($6, zip),
-		    website    = COALESCE($7, website),
-		    phone      = COALESCE($8, phone),
-		    logo_url   = COALESCE($9, logo_url),
+		    org_type   = COALESCE($3, org_type),
+		    mission    = COALESCE($4, mission),
+		    city       = COALESCE($5, city),
+		    state      = COALESCE($6, state),
+		    zip        = COALESCE($7, zip),
+		    website    = COALESCE($8, website),
+		    phone      = COALESCE($9, phone),
+		    logo_url   = COALESCE($10, logo_url),
 		    updated_at = NOW()
 		WHERE id = $1
 		RETURNING id, name, slug, ein, org_type, mission, address_line1, address_line2,
 		          city, state, zip, county, website, phone, logo_url, plan, plan_expires_at,
 		          is_active, created_at, updated_at`
 	return scanOrg(r.db.QueryRow(ctx, q,
-		p.ID, p.Name, p.Mission, p.City, p.State, p.Zip, p.Website, p.Phone, p.LogoURL,
+		p.ID, p.Name, p.OrgType, p.Mission, p.City, p.State, p.Zip, p.Website, p.Phone, p.LogoURL,
 	))
 }
 
@@ -179,7 +184,7 @@ func scanOrg(row scannable) (*domain.Organization, error) {
 		&o.ID, &o.Name, &o.Slug, &o.EIN, &orgType, &o.Mission,
 		&o.AddressLine1, &o.AddressLine2, &o.City, &o.State, &o.Zip, &o.County,
 		&o.Website, &o.Phone, &o.LogoURL, &plan, &o.PlanExpiresAt,
-		&o.IsActive, &o.CreatedAt, &o.UpdatedAt,
+		&o.IsActive, &o.CreatedAt, &o.UpdatedAt, &o.OwnerEmail,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("scan org: %w", err)

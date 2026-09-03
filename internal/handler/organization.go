@@ -60,6 +60,25 @@ func (h *OrgHandler) CreateOrg(c *gin.Context) {
 	response.Created(c, org)
 }
 
+// ListOrgs godoc
+// @Summary      List all organizations (admin)
+// @Tags         admin
+// @Security     BearerAuth
+// @Produce      json
+// @Param        limit   query  int  false  "Page size (default 50)"
+// @Param        offset  query  int  false  "Page offset"
+// @Success      200  {object}  response.Envelope
+// @Router       /admin/orgs [get]
+func (h *OrgHandler) ListOrgs(c *gin.Context) {
+	limit, offset := parsePagination(c)
+	orgs, err := h.orgSvc.ListOrgs(c.Request.Context(), int32(limit), int32(offset))
+	if err != nil {
+		response.InternalError(c, err)
+		return
+	}
+	response.OKWithMeta(c, orgs, &response.Meta{Limit: limit, Offset: offset})
+}
+
 // GetOrg godoc
 // @Summary      Get an organization by ID
 // @Tags         organizations
@@ -106,6 +125,7 @@ func (h *OrgHandler) UpdateOrg(c *gin.Context) {
 	org, err := h.orgSvc.UpdateOrg(c.Request.Context(), repository.UpdateOrgParams{
 		ID:      id,
 		Name:    req.Name,
+		OrgType: req.OrgType,
 		Mission: req.Mission,
 		City:    req.City,
 		State:   req.State,
@@ -205,6 +225,7 @@ type createOrgRequest struct {
 
 type updateOrgRequest struct {
 	Name    *string `json:"name"`
+	OrgType *string `json:"org_type"`
 	Mission *string `json:"mission"`
 	City    *string `json:"city"`
 	State   *string `json:"state"`

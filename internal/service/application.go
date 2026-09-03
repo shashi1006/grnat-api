@@ -59,6 +59,11 @@ func (s *ApplicationService) GetByID(ctx context.Context, id uuid.UUID) (*domain
 	return app, nil
 }
 
+// List returns all applications across all organizations.
+func (s *ApplicationService) List(ctx context.Context, limit, offset int32) ([]*domain.GrantApplication, error) {
+	return s.apps.List(ctx, limit, offset)
+}
+
 // ListForOrg returns all applications for an organization.
 func (s *ApplicationService) ListForOrg(ctx context.Context, orgID uuid.UUID, limit, offset int32) ([]*domain.GrantApplication, error) {
 	return s.apps.ListForOrg(ctx, orgID, limit, offset)

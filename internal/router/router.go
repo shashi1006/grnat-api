@@ -70,6 +70,7 @@ func New(deps Deps) *gin.Engine {
 		pub.POST("/auth/signup", deps.Auth.Signup)
 		pub.POST("/auth/login", deps.Auth.Login)
 		pub.POST("/auth/google", deps.Auth.Google)
+		pub.POST("/auth/forgot-password", deps.Auth.ForgotPassword)
 		pub.POST("/auth/reset-password", deps.Auth.ResetPassword)
 		pub.POST("/leads", deps.Lead.CaptureLead) // quiz / landing page capture
 	}
@@ -166,6 +167,10 @@ func New(deps Deps) *gin.Engine {
 		// User management
 		admin.GET("/users", deps.Auth.ListUsers)
 		admin.PATCH("/users/:id/role", deps.Auth.UpdateUserRole)
+
+		// Organization & application management
+		admin.GET("/orgs", deps.Org.ListOrgs)
+		admin.GET("/applications", deps.Application.ListAllApplications)
 	}
 
 	return r

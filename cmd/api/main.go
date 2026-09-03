@@ -91,7 +91,8 @@ func main() {
 	scoringEngine := scoring.NewEngine()
 
 	// --- Services ---
-	authSvc := service.NewAuthService(userRepo, jwtMgr, cfg.Firebase.WebAPIKey)
+	emailSvc := service.NewEmailService(cfg.Email)
+	authSvc := service.NewAuthService(userRepo, jwtMgr, cfg.Firebase.WebAPIKey, cfg.App.FrontendURL, emailSvc)
 	grantSvc := service.NewGrantService(grantRepo, embedSvc, ragEngine)
 	scoringSvc := service.NewScoringService(orgRepo, grantRepo, scoreRepo, scoringEngine)
 	orgSvc := service.NewOrgService(orgRepo, embedSvc)

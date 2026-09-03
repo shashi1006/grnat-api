@@ -43,6 +43,7 @@ type CreateOrgParams struct {
 type UpdateOrgParams struct {
 	ID      uuid.UUID
 	Name    *string
+	OrgType *string
 	Mission *string
 	City    *string
 	State   *string
@@ -294,6 +295,7 @@ type ApplicationRepo interface {
 	Create(ctx context.Context, params CreateApplicationParams) (*domain.GrantApplication, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*domain.GrantApplication, error)
 	GetByOrgAndGrant(ctx context.Context, orgID, grantID uuid.UUID) (*domain.GrantApplication, error)
+	List(ctx context.Context, limit, offset int32) ([]*domain.GrantApplication, error)
 	ListForOrg(ctx context.Context, orgID uuid.UUID, limit, offset int32) ([]*domain.GrantApplication, error)
 	ListByStatus(ctx context.Context, status string, limit, offset int32) ([]*domain.GrantApplication, error)
 	UpdateStatus(ctx context.Context, id uuid.UUID, status domain.ApplicationStatus, stage *domain.ApplicationStage) (*domain.GrantApplication, error)
@@ -310,6 +312,7 @@ type CreateApplicationParams struct {
 	OrgID              uuid.UUID
 	GrantID            uuid.UUID
 	AssignedTo         *uuid.UUID
+	CreatedBy          *uuid.UUID
 	Status             domain.ApplicationStatus
 	Stage              domain.ApplicationStage
 	Priority           domain.ApplicationPriority

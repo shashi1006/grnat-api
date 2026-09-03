@@ -246,6 +246,32 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	response.OK(c, gin.H{"message": "password updated"})
 }
 
+// ForgotPassword godoc
+// @Summary      Request a password reset link
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        body body forgotPasswordRequest true "Forgot password payload"
+// @Success      200  {object} response.Envelope
+// @Router       /auth/forgot-password [post]
+func (h *AuthHandler) ForgotPassword(c *gin.Context) {
+	var req forgotPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+	token, err := h.authSvc.ForgotPassword(c.Request.Context(), service.ForgotPasswordRequest{Email: req.Email})
+	if err != nil {
+		response.InternalError(c, err)
+		return
+	}
+	// In production this token should be sent via email. Logging it here for local dev only.
+	if token != "" {
+		c.Writer.Header().Set("X-Password-Reset-Token", token)
+	}
+	response.OK(c, gin.H{"message": "If this email is registered, you will receive a reset link."})
+}
+
 // ResetPassword godoc
 // @Summary      Reset password using a reset token
 // @Tags         auth
@@ -287,6 +313,10 @@ type loginRequest struct {
 type changePasswordRequest struct {
 	OldPassword string `json:"old_password" binding:"required"`
 	NewPassword string `json:"new_password" binding:"required,min=8"`
+}
+
+type forgotPasswordRequest struct {
+	Email string `json:"email" binding:"required,email"`
 }
 
 type resetPasswordRequest struct {

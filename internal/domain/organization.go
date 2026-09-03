@@ -125,6 +125,9 @@ type Organization struct {
 	IsActive      bool       `json:"is_active"`
 	CreatedAt     time.Time  `json:"created_at"`
 	UpdatedAt     time.Time  `json:"updated_at"`
+
+	// Joined / admin fields
+	OwnerEmail *string `json:"owner_email,omitempty"`
 }
 
 // OrganizationProfile stores detailed org attributes for matching.

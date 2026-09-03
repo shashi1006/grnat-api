@@ -10,14 +10,14 @@ import (
 type ApplicationStatus string
 
 const (
-	AppStatusProspect        ApplicationStatus = "prospect"
-	AppStatusResearching     ApplicationStatus = "researching"
-	AppStatusDrafting        ApplicationStatus = "drafting"
-	AppStatusInternalReview  ApplicationStatus = "internal_review"
-	AppStatusSubmitted       ApplicationStatus = "submitted"
-	AppStatusAwarded         ApplicationStatus = "awarded"
-	AppStatusRejected        ApplicationStatus = "rejected"
-	AppStatusWithdrawn       ApplicationStatus = "withdrawn"
+	AppStatusProspect       ApplicationStatus = "prospect"
+	AppStatusResearching    ApplicationStatus = "researching"
+	AppStatusDrafting       ApplicationStatus = "drafting"
+	AppStatusInternalReview ApplicationStatus = "internal_review"
+	AppStatusSubmitted      ApplicationStatus = "submitted"
+	AppStatusAwarded        ApplicationStatus = "awarded"
+	AppStatusRejected       ApplicationStatus = "rejected"
+	AppStatusWithdrawn      ApplicationStatus = "withdrawn"
 )
 
 // ApplicationStage enumerates broad phases.
@@ -45,6 +45,7 @@ type GrantApplication struct {
 	OrgID              uuid.UUID           `json:"org_id"`
 	GrantID            uuid.UUID           `json:"grant_id"`
 	AssignedTo         *uuid.UUID          `json:"assigned_to,omitempty"`
+	CreatedBy          *uuid.UUID          `json:"created_by,omitempty"`
 	Status             ApplicationStatus   `json:"status"`
 	Stage              ApplicationStage    `json:"stage"`
 	Priority           ApplicationPriority `json:"priority"`
@@ -59,9 +60,11 @@ type GrantApplication struct {
 	UpdatedAt          time.Time           `json:"updated_at"`
 
 	// Joined fields
-	GrantTitle    *string    `json:"grant_title,omitempty"`
-	FunderName    *string    `json:"funder_name,omitempty"`
-	GrantDeadline *time.Time `json:"grant_deadline,omitempty"`
+	GrantTitle     *string    `json:"grant_title,omitempty"`
+	FunderName     *string    `json:"funder_name,omitempty"`
+	GrantDeadline  *time.Time `json:"grant_deadline,omitempty"`
+	OrgName        *string    `json:"org_name,omitempty"`
+	CreatedByEmail *string    `json:"created_by_email,omitempty"`
 }
 
 // ApplicationActivity is an audit log entry for an application.

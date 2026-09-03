@@ -57,10 +57,16 @@ func (h *ApplicationHandler) CreateApplication(c *gin.Context) {
 		assignedTo = &aid
 	}
 
+	userID, _ := middleware.GetUserID(c)
+	var createdBy *uuid.UUID
+	if userID != uuid.Nil {
+		createdBy = &userID
+	}
 	app, err := h.appSvc.Create(c.Request.Context(), repository.CreateApplicationParams{
 		OrgID:            orgID,
 		GrantID:          grantID,
 		AssignedTo:       assignedTo,
+		CreatedBy:        createdBy,
 		Status:           domain.AppStatusProspect,
 		Stage:            domain.StagePreApplication,
 		Priority:         domain.ApplicationPriority(req.Priority),
@@ -94,6 +100,25 @@ func (h *ApplicationHandler) GetApplication(c *gin.Context) {
 		return
 	}
 	response.OK(c, app)
+}
+
+// ListAllApplications godoc
+// @Summary      List all applications (admin)
+// @Tags         admin
+// @Security     BearerAuth
+// @Produce      json
+// @Param        limit   query  int  false  "Page size"
+// @Param        offset  query  int  false  "Page offset"
+// @Success      200  {object}  response.Envelope
+// @Router       /admin/applications [get]
+func (h *ApplicationHandler) ListAllApplications(c *gin.Context) {
+	limit, offset := parsePagination(c)
+	apps, err := h.appSvc.List(c.Request.Context(), int32(limit), int32(offset))
+	if err != nil {
+		response.InternalError(c, err)
+		return
+	}
+	response.OKWithMeta(c, apps, &response.Meta{Limit: limit, Offset: offset})
 }
 
 // ListApplications godoc

@@ -32,13 +32,13 @@ func (r *applicationRepo) Create(ctx context.Context, p repository.CreateApplica
 
 	row := r.db.QueryRow(ctx, `
 		INSERT INTO grant_applications
-			(org_id, grant_id, assigned_to, status, stage, priority,
+			(org_id, grant_id, assigned_to, created_by, status, stage, priority,
 			 compatibility_score, notes, internal_deadline)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-		RETURNING id, org_id, grant_id, assigned_to, status, stage, priority,
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+		RETURNING id, org_id, grant_id, assigned_to, created_by, status, stage, priority,
 		          compatibility_score, submission_date, award_amount, award_date,
 		          rejection_reason, notes, internal_deadline, created_at, updated_at`,
-		p.OrgID, p.GrantID, p.AssignedTo, p.Status, p.Stage, p.Priority,
+		p.OrgID, p.GrantID, p.AssignedTo, p.CreatedBy, p.Status, p.Stage, p.Priority,
 		p.CompatibilityScore, p.Notes, internalDeadline,
 	)
 	return scanApplication(row)
@@ -46,36 +46,48 @@ func (r *applicationRepo) Create(ctx context.Context, p repository.CreateApplica
 
 func (r *applicationRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.GrantApplication, error) {
 	row := r.db.QueryRow(ctx, `
-		SELECT a.id, a.org_id, a.grant_id, a.assigned_to, a.status, a.stage, a.priority,
+		SELECT a.id, a.org_id, a.grant_id, a.assigned_to, a.created_by, a.status, a.stage, a.priority,
 		       a.compatibility_score, a.submission_date, a.award_amount, a.award_date,
 		       a.rejection_reason, a.notes, a.internal_deadline, a.created_at, a.updated_at,
-		       g.title, g.funder_name, g.deadline
+		       g.title, g.funder_name, g.deadline,
+		       o.name as org_name,
+		       u.email as created_by_email
 		FROM grant_applications a
 		JOIN grants g ON g.id = a.grant_id
+		JOIN organizations o ON o.id = a.org_id
+		LEFT JOIN users u ON u.id = a.created_by
 		WHERE a.id = $1`, id)
 	return scanApplicationWithGrant(row)
 }
 
 func (r *applicationRepo) GetByOrgAndGrant(ctx context.Context, orgID, grantID uuid.UUID) (*domain.GrantApplication, error) {
 	row := r.db.QueryRow(ctx, `
-		SELECT a.id, a.org_id, a.grant_id, a.assigned_to, a.status, a.stage, a.priority,
+		SELECT a.id, a.org_id, a.grant_id, a.assigned_to, a.created_by, a.status, a.stage, a.priority,
 		       a.compatibility_score, a.submission_date, a.award_amount, a.award_date,
 		       a.rejection_reason, a.notes, a.internal_deadline, a.created_at, a.updated_at,
-		       g.title, g.funder_name, g.deadline
+		       g.title, g.funder_name, g.deadline,
+		       o.name as org_name,
+		       u.email as created_by_email
 		FROM grant_applications a
 		JOIN grants g ON g.id = a.grant_id
+		JOIN organizations o ON o.id = a.org_id
+		LEFT JOIN users u ON u.id = a.created_by
 		WHERE a.org_id = $1 AND a.grant_id = $2`, orgID, grantID)
 	return scanApplicationWithGrant(row)
 }
 
 func (r *applicationRepo) ListForOrg(ctx context.Context, orgID uuid.UUID, limit, offset int32) ([]*domain.GrantApplication, error) {
 	rows, err := r.db.Query(ctx, `
-		SELECT a.id, a.org_id, a.grant_id, a.assigned_to, a.status, a.stage, a.priority,
+		SELECT a.id, a.org_id, a.grant_id, a.assigned_to, a.created_by, a.status, a.stage, a.priority,
 		       a.compatibility_score, a.submission_date, a.award_amount, a.award_date,
 		       a.rejection_reason, a.notes, a.internal_deadline, a.created_at, a.updated_at,
-		       g.title, g.funder_name, g.deadline
+		       g.title, g.funder_name, g.deadline,
+		       o.name as org_name,
+		       u.email as created_by_email
 		FROM grant_applications a
 		JOIN grants g ON g.id = a.grant_id
+		JOIN organizations o ON o.id = a.org_id
+		LEFT JOIN users u ON u.id = a.created_by
 		WHERE a.org_id = $1
 		ORDER BY a.updated_at DESC
 		LIMIT $2 OFFSET $3`, orgID, limit, offset)
@@ -94,14 +106,47 @@ func (r *applicationRepo) ListForOrg(ctx context.Context, orgID uuid.UUID, limit
 	return out, rows.Err()
 }
 
-func (r *applicationRepo) ListByStatus(ctx context.Context, status string, limit, offset int32) ([]*domain.GrantApplication, error) {
+func (r *applicationRepo) List(ctx context.Context, limit, offset int32) ([]*domain.GrantApplication, error) {
 	rows, err := r.db.Query(ctx, `
-		SELECT a.id, a.org_id, a.grant_id, a.assigned_to, a.status, a.stage, a.priority,
+		SELECT a.id, a.org_id, a.grant_id, a.assigned_to, a.created_by, a.status, a.stage, a.priority,
 		       a.compatibility_score, a.submission_date, a.award_amount, a.award_date,
 		       a.rejection_reason, a.notes, a.internal_deadline, a.created_at, a.updated_at,
-		       g.title, g.funder_name, g.deadline
+		       g.title, g.funder_name, g.deadline,
+		       o.name as org_name,
+		       u.email as created_by_email
 		FROM grant_applications a
 		JOIN grants g ON g.id = a.grant_id
+		JOIN organizations o ON o.id = a.org_id
+		LEFT JOIN users u ON u.id = a.created_by
+		ORDER BY a.updated_at DESC
+		LIMIT $1 OFFSET $2`, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []*domain.GrantApplication
+	for rows.Next() {
+		a, err := scanApplicationWithGrant(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, a)
+	}
+	return out, rows.Err()
+}
+
+func (r *applicationRepo) ListByStatus(ctx context.Context, status string, limit, offset int32) ([]*domain.GrantApplication, error) {
+	rows, err := r.db.Query(ctx, `
+		SELECT a.id, a.org_id, a.grant_id, a.assigned_to, a.created_by, a.status, a.stage, a.priority,
+		       a.compatibility_score, a.submission_date, a.award_amount, a.award_date,
+		       a.rejection_reason, a.notes, a.internal_deadline, a.created_at, a.updated_at,
+		       g.title, g.funder_name, g.deadline,
+		       o.name as org_name,
+		       u.email as created_by_email
+		FROM grant_applications a
+		JOIN grants g ON g.id = a.grant_id
+		JOIN organizations o ON o.id = a.org_id
+		LEFT JOIN users u ON u.id = a.created_by
 		WHERE a.status = $1
 		ORDER BY a.updated_at DESC
 		LIMIT $2 OFFSET $3`, status, limit, offset)
@@ -125,7 +170,7 @@ func (r *applicationRepo) UpdateStatus(ctx context.Context, id uuid.UUID, status
 		UPDATE grant_applications
 		SET status = $2, stage = COALESCE($3, stage), updated_at = NOW()
 		WHERE id = $1
-		RETURNING id, org_id, grant_id, assigned_to, status, stage, priority,
+		RETURNING id, org_id, grant_id, assigned_to, created_by, status, stage, priority,
 		          compatibility_score, submission_date, award_amount, award_date,
 		          rejection_reason, notes, internal_deadline, created_at, updated_at`,
 		id, status, stage)
@@ -161,7 +206,7 @@ func (r *applicationRepo) Update(ctx context.Context, p repository.UpdateApplica
 			award_amount      = COALESCE($9, award_amount),
 			updated_at        = NOW()
 		WHERE id = $1
-		RETURNING id, org_id, grant_id, assigned_to, status, stage, priority,
+		RETURNING id, org_id, grant_id, assigned_to, created_by, status, stage, priority,
 		          compatibility_score, submission_date, award_amount, award_date,
 		          rejection_reason, notes, internal_deadline, created_at, updated_at`,
 		p.ID, p.AssignedTo, p.Status, p.Stage, p.Priority,
@@ -281,7 +326,7 @@ type scanner interface {
 func scanApplication(row scanner) (*domain.GrantApplication, error) {
 	var a domain.GrantApplication
 	err := row.Scan(
-		&a.ID, &a.OrgID, &a.GrantID, &a.AssignedTo,
+		&a.ID, &a.OrgID, &a.GrantID, &a.AssignedTo, &a.CreatedBy,
 		&a.Status, &a.Stage, &a.Priority,
 		&a.CompatibilityScore, &a.SubmissionDate, &a.AwardAmount,
 		&a.AwardDate, &a.RejectionReason, &a.Notes,
@@ -296,12 +341,13 @@ func scanApplication(row scanner) (*domain.GrantApplication, error) {
 func scanApplicationWithGrant(row scanner) (*domain.GrantApplication, error) {
 	var a domain.GrantApplication
 	err := row.Scan(
-		&a.ID, &a.OrgID, &a.GrantID, &a.AssignedTo,
+		&a.ID, &a.OrgID, &a.GrantID, &a.AssignedTo, &a.CreatedBy,
 		&a.Status, &a.Stage, &a.Priority,
 		&a.CompatibilityScore, &a.SubmissionDate, &a.AwardAmount,
 		&a.AwardDate, &a.RejectionReason, &a.Notes,
 		&a.InternalDeadline, &a.CreatedAt, &a.UpdatedAt,
 		&a.GrantTitle, &a.FunderName, &a.GrantDeadline,
+		&a.OrgName, &a.CreatedByEmail,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("scan application+grant: %w", err)

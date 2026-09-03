@@ -3,6 +3,8 @@ package service
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -23,11 +25,13 @@ type AuthService struct {
 	users       repository.UserRepo
 	jwt         *jwt.Manager
 	firebaseKey string
+	email       *EmailService
+	baseURL     string
 }
 
 // NewAuthService creates an AuthService.
-func NewAuthService(users repository.UserRepo, jwtMgr *jwt.Manager, firebaseKey string) *AuthService {
-	return &AuthService{users: users, jwt: jwtMgr, firebaseKey: firebaseKey}
+func NewAuthService(users repository.UserRepo, jwtMgr *jwt.Manager, firebaseKey, baseURL string, email *EmailService) *AuthService {
+	return &AuthService{users: users, jwt: jwtMgr, firebaseKey: firebaseKey, email: email, baseURL: baseURL}
 }
 
 // SignupRequest is the input for user registration.
@@ -266,6 +270,45 @@ func (s *AuthService) ChangePassword(ctx context.Context, req ChangePasswordRequ
 type ResetPasswordRequest struct {
 	Token       string
 	NewPassword string
+}
+
+// ForgotPasswordRequest contains the email to send a reset link to.
+type ForgotPasswordRequest struct {
+	Email string
+}
+
+// ForgotPassword generates a password reset token and sends it via email if configured.
+func (s *AuthService) ForgotPassword(ctx context.Context, req ForgotPasswordRequest) (string, error) {
+	user, err := s.users.GetByEmail(ctx, req.Email)
+	if err != nil {
+		// Return generic success to prevent email enumeration
+		return "", nil
+	}
+
+	raw := make([]byte, 32)
+	if _, err := rand.Read(raw); err != nil {
+		return "", fmt.Errorf("generate token: %w", err)
+	}
+	token := hex.EncodeToString(raw)
+
+	// 24-hour expiration.
+	if err := s.users.CreatePasswordResetToken(ctx, user.ID, token, 24*60*60); err != nil {
+		return "", fmt.Errorf("store reset token: %w", err)
+	}
+
+	if s.email != nil && s.email.cfg.Enabled {
+		resetURL := fmt.Sprintf("%s/#/reset-password?token=%s", s.baseURL, token)
+		subject := "Reset your ReadyGeneration password"
+		body := fmt.Sprintf("Hi,\n\nClick the link below to reset your password:\n%s\n\nThis link expires in 24 hours.\n", resetURL)
+		if err := s.email.Send(user.Email, subject, body); err != nil {
+			// Log but do not leak email status; return token so caller can decide.
+			return token, fmt.Errorf("send reset email: %w", err)
+		}
+		return "", nil
+	}
+
+	// Email not configured: return token for logging/dev fallback.
+	return token, nil
 }
 
 // ResetPassword validates a reset token and sets a new password.

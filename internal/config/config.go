@@ -19,6 +19,7 @@ type Config struct {
 	Firebase  FirebaseConfig
 	CORS      CORSConfig
 	RateLimit RateLimitConfig
+	Email     EmailConfig
 }
 
 type FirebaseConfig struct {
@@ -26,11 +27,12 @@ type FirebaseConfig struct {
 }
 
 type AppConfig struct {
-	Name    string
-	Env     string // development, staging, production
-	Port    int
-	Debug   bool
-	BaseURL string
+	Name        string
+	Env         string // development, staging, production
+	Port        int
+	Debug       bool
+	BaseURL     string
+	FrontendURL string
 }
 
 type DBConfig struct {
@@ -78,6 +80,15 @@ type RateLimitConfig struct {
 	BurstSize         int64
 }
 
+type EmailConfig struct {
+	Host     string
+	Port     int
+	User     string
+	Password string
+	From     string
+	Enabled  bool
+}
+
 // Load reads configuration from environment variables.
 func Load() (*Config, error) {
 	v := viper.New()
@@ -91,6 +102,7 @@ func Load() (*Config, error) {
 	v.SetDefault("app.port", 8080)
 	v.SetDefault("app.debug", false)
 	v.SetDefault("app.base_url", "http://localhost:8080")
+	v.SetDefault("app.frontend_url", "http://127.0.0.1:4200")
 
 	// DB defaults
 	v.SetDefault("db.max_open_conns", 25)
@@ -125,6 +137,14 @@ func Load() (*Config, error) {
 	// Rate limit defaults
 	v.SetDefault("rate_limit.requests_per_minute", 60)
 	v.SetDefault("rate_limit.burst_size", 10)
+
+	// Email defaults
+	v.SetDefault("email.host", "smtp.gmail.com")
+	v.SetDefault("email.port", 587)
+	v.SetDefault("email.user", "")
+	v.SetDefault("email.password", "")
+	v.SetDefault("email.from", "responseiot@gmail.com")
+	v.SetDefault("email.enabled", false)
 
 	connMaxLifetime, err := time.ParseDuration(v.GetString("db.conn_max_lifetime"))
 	if err != nil {
@@ -171,11 +191,12 @@ func Load() (*Config, error) {
 
 	return &Config{
 		App: AppConfig{
-			Name:    v.GetString("app.name"),
-			Env:     v.GetString("APP_ENV"),
-			Port:    v.GetInt("PORT"),
-			Debug:   v.GetBool("app.debug"),
-			BaseURL: v.GetString("app.base_url"),
+			Name:        v.GetString("app.name"),
+			Env:         v.GetString("APP_ENV"),
+			Port:        v.GetInt("PORT"),
+			Debug:       v.GetBool("app.debug"),
+			BaseURL:     v.GetString("app.base_url"),
+			FrontendURL: v.GetString("app.frontend_url"),
 		},
 		DB: DBConfig{
 			URL:             dbURL,
@@ -217,6 +238,14 @@ func Load() (*Config, error) {
 		RateLimit: RateLimitConfig{
 			RequestsPerMinute: v.GetInt64("rate_limit.requests_per_minute"),
 			BurstSize:         v.GetInt64("rate_limit.burst_size"),
+		},
+		Email: EmailConfig{
+			Host:     v.GetString("email.host"),
+			Port:     v.GetInt("email.port"),
+			User:     v.GetString("email.user"),
+			Password: v.GetString("email.password"),
+			From:     v.GetString("email.from"),
+			Enabled:  v.GetBool("email.enabled"),
 		},
 	}, nil
 }
