@@ -21,12 +21,30 @@ func NewEmailService(cfg config.EmailConfig) *EmailService {
 
 // Send sends a plain-text email to the given recipient.
 func (s *EmailService) Send(to, subject, body string) error {
+	return s.send(to, subject, "text/plain", "", body)
+}
+
+// SendHTML sends an HTML email with a plain-text fallback.
+func (s *EmailService) SendHTML(to, subject, htmlBody, textBody string) error {
+	const boundary = "rg-boundary-0123456789"
+	parts := fmt.Sprintf("--%s\r\nContent-Type: text/plain; charset=\"utf-8\"\r\n\r\n%s\r\n\r\n--%s\r\nContent-Type: text/html; charset=\"utf-8\"\r\n\r\n%s\r\n\r\n--%s--\r\n",
+		boundary, textBody, boundary, htmlBody, boundary)
+	headers := fmt.Sprintf("MIME-Version: 1.0\r\nContent-Type: multipart/alternative; boundary=\"%s\"\r\n", boundary)
+	return s.send(to, subject, "", headers, parts)
+}
+
+func (s *EmailService) send(to, subject, contentType, extraHeaders, body string) error {
 	if !s.cfg.Enabled {
 		return fmt.Errorf("email not enabled")
 	}
 
 	addr := fmt.Sprintf("%s:%d", s.cfg.Host, s.cfg.Port)
-	msg := []byte(fmt.Sprintf("To: %s\r\nFrom: %s\r\nSubject: %s\r\n\r\n%s\r\n", to, s.cfg.From, subject, body))
+	contentTypeHeader := ""
+	if contentType != "" {
+		contentTypeHeader = fmt.Sprintf("Content-Type: %s; charset=\"utf-8\"\r\n", contentType)
+	}
+	msg := []byte(fmt.Sprintf("To: %s\r\nFrom: %s\r\nSubject: %s\r\n%s%s\r\n%s",
+		to, s.cfg.From, subject, contentTypeHeader, extraHeaders, body))
 
 	if s.cfg.Port == 587 {
 		return s.sendStartTLS(addr, to, msg)

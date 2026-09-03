@@ -299,8 +299,21 @@ func (s *AuthService) ForgotPassword(ctx context.Context, req ForgotPasswordRequ
 	if s.email != nil && s.email.cfg.Enabled {
 		resetURL := fmt.Sprintf("%s/#/reset-password?token=%s", s.baseURL, token)
 		subject := "Reset your ReadyGeneration password"
-		body := fmt.Sprintf("Hi,\n\nClick the link below to reset your password:\n%s\n\nThis link expires in 24 hours.\n", resetURL)
-		if err := s.email.Send(user.Email, subject, body); err != nil {
+		textBody := fmt.Sprintf("Reset your ReadyGeneration password:\n%s\n\nThis link expires in 24 hours.\n", resetURL)
+		htmlBody := fmt.Sprintf(`<!DOCTYPE html>
+<html>
+<body style="font-family: Arial, sans-serif; background: #f4f6f8; padding: 40px; margin: 0;">
+  <div style="max-width: 520px; margin: auto; background: #ffffff; border-radius: 12px; padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+    <h2 style="color: #003087; margin-top: 0;">Reset your password</h2>
+    <p style="color: #4a5568; font-size: 15px; line-height: 1.6;">We received a request to reset your ReadyGeneration password. Click the button below to choose a new password.</p>
+    <a href="%s" style="display: inline-block; margin: 20px 0; background: #003087; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600;">Reset password</a>
+    <p style="color: #4a5568; font-size: 14px; line-height: 1.5;">If you did not request a password reset, you can safely ignore this email.</p>
+    <p style="color: #718096; font-size: 13px; margin-top: 24px;">This link expires in 24 hours.</p>
+    <p style="color: #a0aec0; font-size: 12px; word-break: break-all;">%s</p>
+  </div>
+</body>
+</html>`, resetURL, resetURL)
+		if err := s.email.SendHTML(user.Email, subject, htmlBody, textBody); err != nil {
 			// Log but do not leak email status; return token so caller can decide.
 			return token, fmt.Errorf("send reset email: %w", err)
 		}
