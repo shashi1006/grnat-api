@@ -62,6 +62,12 @@ func main() {
 		log.Fatalf("run migrations: %v", err)
 	}
 
+	// Allow deploy scripts to run migrations separately before service start.
+	if os.Getenv("MIGRATE_ONLY") == "true" {
+		log.Println("migrations complete")
+		return
+	}
+
 	// --- JWT ---
 	jwtMgr := jwt.NewManager(cfg.JWT.Secret, cfg.JWT.Issuer, cfg.JWT.TTLSeconds)
 

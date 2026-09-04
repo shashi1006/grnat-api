@@ -87,6 +87,7 @@ func (s *AuthService) Signup(ctx context.Context, req SignupRequest) (*AuthResul
 		return nil, fmt.Errorf("sign token: %w", err)
 	}
 	_ = s.users.UpdateLastLogin(ctx, user.ID)
+	s.sendWelcomeEmail(user)
 	return &AuthResult{Token: token, User: user}, nil
 }
 
@@ -213,6 +214,7 @@ func (s *AuthService) GoogleLogin(ctx context.Context, req GoogleLoginRequest) (
 			return nil, fmt.Errorf("create user: %w", err)
 		}
 		user = newUser
+		s.sendWelcomeEmail(user)
 	}
 
 	token, err := s.jwt.Sign(user.ID, nil, string(user.Role))
@@ -345,4 +347,32 @@ func (s *AuthService) ResetPassword(ctx context.Context, req ResetPasswordReques
 		return err
 	}
 	return s.users.MarkPasswordResetTokenUsed(ctx, tokenRecord.ID)
+}
+
+// sendWelcomeEmail sends a best-effort welcome email to a newly created user.
+func (s *AuthService) sendWelcomeEmail(user *domain.User) {
+	if s.email == nil || !s.email.cfg.Enabled {
+		return
+	}
+
+	name := user.FirstName
+	if name == nil || *name == "" {
+		name = &user.Email
+	}
+	subject := "Welcome to ReadyGeneration"
+	loginURL := fmt.Sprintf("%s/#/login", s.baseURL)
+	textBody := fmt.Sprintf("Hi %s,\n\nWelcome to ReadyGeneration! Your account has been created successfully.\n\nSign in here: %s\n\nIf you have any questions, we're here to help.\n", *name, loginURL)
+	htmlBody := fmt.Sprintf(`<!DOCTYPE html>
+<html>
+<body style="font-family: Arial, sans-serif; background: #f4f6f8; padding: 40px; margin: 0;">
+  <div style="max-width: 520px; margin: auto; background: #ffffff; border-radius: 12px; padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+    <h2 style="color: #003087; margin-top: 0;">Welcome to ReadyGeneration</h2>
+    <p style="color: #4a5568; font-size: 15px; line-height: 1.6;">Hi %s,</p>
+    <p style="color: #4a5568; font-size: 15px; line-height: 1.6;">Your account has been created successfully. We're excited to help you find and apply for funding opportunities.</p>
+    <a href="%s" style="display: inline-block; margin: 20px 0; background: #003087; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600;">Sign in</a>
+    <p style="color: #718096; font-size: 13px; margin-top: 24px;">If you have any questions, reply to this email.</p>
+  </div>
+</body>
+</html>`, *name, loginURL)
+	_ = s.email.SendHTML(user.Email, subject, htmlBody, textBody)
 }

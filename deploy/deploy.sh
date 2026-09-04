@@ -36,16 +36,19 @@ $SSH $SERVER "sudo ln -sf $APP_DIR/nginx.conf /etc/nginx/sites-enabled/readygene
   && sudo nginx -t \
   && sudo systemctl reload nginx"
 
-echo "==> Starting PostgreSQL via Docker..."
-$SSH $SERVER "cd $APP_DIR && sudo docker compose up -d postgres"
-
 echo "==> Setting binary as executable..."
 $SSH $SERVER "chmod +x $APP_DIR/api"
+
+echo "==> Starting PostgreSQL via Docker..."
+$SSH $SERVER "cd $APP_DIR && sudo docker compose up -d postgres"
 
 echo "==> Waiting for Postgres to be ready..."
 $SSH $SERVER "sleep 6"
 
-echo "==> (Re)starting API service (migrations run automatically on startup)..."
+echo "==> Running database migrations..."
+$SSH $SERVER "set -a && . $APP_DIR/.env && set +a && MIGRATE_ONLY=true $APP_DIR/api"
+
+echo "==> (Re)starting API service..."
 $SSH $SERVER "sudo systemctl restart rg-api && sudo systemctl status rg-api --no-pager"
 
 echo ""
