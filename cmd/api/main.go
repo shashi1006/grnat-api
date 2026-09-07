@@ -23,6 +23,7 @@ import (
 
 	"github.com/readygeneration/readygeneration-backend/internal/ai/claude"
 	"github.com/readygeneration/readygeneration-backend/internal/ai/embedding"
+	"github.com/readygeneration/readygeneration-backend/internal/ai/openai"
 	"github.com/readygeneration/readygeneration-backend/internal/ai/rag"
 	"github.com/readygeneration/readygeneration-backend/internal/config"
 	"github.com/readygeneration/readygeneration-backend/internal/db"
@@ -93,6 +94,12 @@ func main() {
 		}
 	}
 
+	// OpenAI client for LLM scoring fallback (uses same key as embeddings)
+	var openAIScoringClient *openai.Client
+	if cfg.Embedding.OpenAIKey != "" {
+		openAIScoringClient = openai.NewClient(cfg.Embedding.OpenAIKey, "")
+	}
+
 	// --- Scoring Engine ---
 	scoringEngine := scoring.NewEngine()
 
@@ -100,7 +107,7 @@ func main() {
 	emailSvc := service.NewEmailService(cfg.Email)
 	authSvc := service.NewAuthService(userRepo, jwtMgr, cfg.Firebase.WebAPIKey, cfg.App.FrontendURL, emailSvc)
 	grantSvc := service.NewGrantService(grantRepo, embedSvc, ragEngine)
-	scoringSvc := service.NewScoringService(orgRepo, grantRepo, scoreRepo, scoringEngine)
+	scoringSvc := service.NewScoringService(orgRepo, grantRepo, scoreRepo, scoringEngine, claudeClient, openAIScoringClient, grantSvc)
 	orgSvc := service.NewOrgService(orgRepo, embedSvc)
 	appSvc := service.NewApplicationService(appRepo, grantRepo, scoreRepo)
 	leadSvc := service.NewLeadService(leadRepo)

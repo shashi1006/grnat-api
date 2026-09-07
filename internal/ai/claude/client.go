@@ -25,9 +25,13 @@ func NewClient(cfg *config.Config) (*Client, error) {
 	if cfg.Claude.APIKey == "" {
 		return nil, fmt.Errorf("ANTHROPIC_API_KEY is required for Claude integration")
 	}
-	sdk := anthropic.NewClient(
+	opts := []option.RequestOption{
 		option.WithAPIKey(cfg.Claude.APIKey),
-	)
+	}
+	if cfg.Claude.WorkspaceID != "" {
+		opts = append(opts, option.WithHeader("anthropic-workspace-id", cfg.Claude.WorkspaceID))
+	}
+	sdk := anthropic.NewClient(opts...)
 	return &Client{
 		sdk:       sdk,
 		model:     cfg.Claude.DefaultModel,

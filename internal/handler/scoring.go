@@ -99,6 +99,30 @@ func (h *ScoringHandler) ListTopGrants(c *gin.Context) {
 	response.OKWithMeta(c, grants, &response.Meta{Limit: limit, Offset: offset})
 }
 
+// EnrichTopGrantsWithLLM godoc
+// @Summary      Enrich top grant scores with an LLM alignment dimension
+// @Tags         scoring
+// @Security     BearerAuth
+// @Produce      json
+// @Param        org_id  path   string  true   "Organization UUID"
+// @Param        limit   query  int     false  "Page size"
+// @Success      200  {object}  response.Envelope
+// @Router       /orgs/{org_id}/top-grants/enrich [post]
+func (h *ScoringHandler) EnrichTopGrantsWithLLM(c *gin.Context) {
+	orgID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "invalid org_id")
+		return
+	}
+	limit, _ := parsePagination(c)
+	result, err := h.scoringSvc.EnrichTopGrantsWithLLM(c.Request.Context(), orgID, int32(limit))
+	if err != nil {
+		response.InternalError(c, err)
+		return
+	}
+	response.OK(c, result)
+}
+
 // ScoreAllGrants godoc
 // @Summary      Trigger bulk scoring of all active grants for an org
 // @Tags         scoring

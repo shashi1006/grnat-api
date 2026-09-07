@@ -58,6 +58,7 @@ type JWTConfig struct {
 
 type ClaudeConfig struct {
 	APIKey              string
+	WorkspaceID         string
 	DefaultModel        string
 	MaxTokens           int
 	EmbeddingModel      string
@@ -172,6 +173,11 @@ func Load() (*Config, error) {
 		claudeKey = v.GetString("claude.api_key")
 	}
 
+	claudeWorkspaceID := v.GetString("ANTHROPIC_WORKSPACE_ID")
+	if claudeWorkspaceID == "" {
+		claudeWorkspaceID = v.GetString("claude.workspace_id")
+	}
+
 	redisURL := v.GetString("REDIS_URL")
 	if redisURL == "" {
 		redisURL = v.GetString("redis.url")
@@ -218,6 +224,7 @@ func Load() (*Config, error) {
 		},
 		Claude: ClaudeConfig{
 			APIKey:              claudeKey,
+			WorkspaceID:         claudeWorkspaceID,
 			DefaultModel:        v.GetString("claude.default_model"),
 			MaxTokens:           v.GetInt("claude.max_tokens"),
 			EmbeddingModel:      v.GetString("claude.embedding_model"),

@@ -33,7 +33,12 @@ var defaultWeights = map[string]float64{
 
 // Compute scores an org/grant pair and returns a ScoringResult.
 func (e *Engine) Compute(input domain.ScoringInput) domain.ScoringResult {
-	result := domain.ScoringResult{}
+	result := domain.ScoringResult{
+		DisqualifyReasons: []string{},
+		Strengths:         []string{},
+		Gaps:              []string{},
+		Recommendations:   []string{},
+	}
 
 	// --- Hard disqualifier checks ---
 	if reasons := e.checkDisqualifiers(input); len(reasons) > 0 {
@@ -71,9 +76,9 @@ func (e *Engine) Compute(input domain.ScoringInput) domain.ScoringResult {
 	result.TotalScore = total
 	result.Tier = domain.ScoreTierFromScore(total)
 	result.DimensionScores = dims
-	result.Strengths = e.deriveStrengths(dims)
-	result.Gaps = e.deriveGaps(dims)
-	result.Recommendations = e.deriveRecommendations(input, dims)
+	result.Strengths = nonNil(e.deriveStrengths(dims))
+	result.Gaps = nonNil(e.deriveGaps(dims))
+	result.Recommendations = nonNil(e.deriveRecommendations(input, dims))
 
 	return result
 }
@@ -337,4 +342,11 @@ func countOverlap(a, b []string) int {
 		}
 	}
 	return n
+}
+
+func nonNil(s []string) []string {
+	if s == nil {
+		return []string{}
+	}
+	return s
 }

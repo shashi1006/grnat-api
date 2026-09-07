@@ -27,7 +27,7 @@ func (r *organizationRepo) Create(ctx context.Context, p repository.CreateOrgPar
 		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
 		RETURNING id, name, slug, ein, org_type, mission, address_line1, address_line2,
 		          city, state, zip, county, website, phone, logo_url, plan, plan_expires_at,
-		          is_active, created_at, updated_at`
+		          is_active, created_at, updated_at, NULL as owner_email`
 	row := r.db.QueryRow(ctx, q,
 		p.Name, p.Slug, p.EIN, string(p.OrgType), p.Mission,
 		p.City, p.State, p.Zip, p.Website, p.Phone, string(p.Plan),

@@ -111,6 +111,7 @@ func New(deps Deps) *gin.Engine {
 
 			// Scoring & narratives scoped to org
 			orgs.GET("/:id/top-grants", deps.Score.ListTopGrants)
+			orgs.POST("/:id/top-grants/enrich", deps.Score.EnrichTopGrantsWithLLM)
 			orgs.POST("/:id/score-all", deps.Score.ScoreAllGrants)
 			orgs.GET("/:id/grants/:grant_id/score", deps.Score.GetScore)
 			orgs.POST("/:id/grants/:grant_id/score", deps.Score.ComputeScore)
