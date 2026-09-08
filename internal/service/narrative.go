@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/readygeneration/readygeneration-backend/internal/ai/claude"
+	"github.com/readygeneration/readygeneration-backend/internal/ai/openai"
 	"github.com/readygeneration/readygeneration-backend/internal/domain"
 	"github.com/readygeneration/readygeneration-backend/internal/repository"
 )
@@ -18,6 +19,7 @@ type NarrativeService struct {
 	scores       repository.ScoringRepo
 	applications repository.ApplicationRepo
 	claudeClient *claude.Client
+	openAIClient *openai.Client
 	grantSvc     *GrantService
 }
 
@@ -28,6 +30,7 @@ func NewNarrativeService(
 	scores repository.ScoringRepo,
 	applications repository.ApplicationRepo,
 	claudeClient *claude.Client,
+	openAIClient *openai.Client,
 	grantSvc *GrantService,
 ) *NarrativeService {
 	return &NarrativeService{
@@ -36,6 +39,7 @@ func NewNarrativeService(
 		scores:       scores,
 		applications: applications,
 		claudeClient: claudeClient,
+		openAIClient: openAIClient,
 		grantSvc:     grantSvc,
 	}
 }
@@ -75,31 +79,67 @@ func (s *NarrativeService) GenerateNarrative(ctx context.Context, req GenerateNa
 	ragQuery := buildRAGQuery(req.Section, *grant)
 	ragContext, _ := s.grantSvc.QueryNOFO(ctx, req.GrantID, ragQuery, 5)
 
-	result, err := s.claudeClient.GenerateNarrative(ctx, claude.NarrativeRequest{
-		Section:     req.Section,
-		Org:         *org,
-		Profile:     *profile,
-		Grant:       *grant,
-		Score:       score,
-		RAGContext:  ragContext,
-		WordTarget:  req.WordTarget,
-		CustomNotes: req.CustomNotes,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("claude generate: %w", err)
+	var content string
+	var model string
+	var wc, ti, to int32
+
+	// Try Claude first
+	if s.claudeClient != nil {
+		result, err := s.claudeClient.GenerateNarrative(ctx, claude.NarrativeRequest{
+			Section:     req.Section,
+			Org:         *org,
+			Profile:     *profile,
+			Grant:       *grant,
+			Score:       score,
+			RAGContext:  ragContext,
+			WordTarget:  req.WordTarget,
+			CustomNotes: req.CustomNotes,
+		})
+		if err == nil {
+			content = result.Content
+			model = result.Model
+			wc = result.WordCount
+			ti = result.TokensIn
+			to = result.TokensOut
+		} else if s.openAIClient == nil {
+			return nil, fmt.Errorf("claude generate: %w", err)
+		}
 	}
 
-	wc := result.WordCount
-	ti := result.TokensIn
-	to := result.TokensOut
+	// Fallback to OpenAI if Claude was unavailable or failed
+	if content == "" && s.openAIClient != nil {
+		result, err := s.openAIClient.GenerateNarrative(ctx, openai.NarrativeRequest{
+			Section:     req.Section,
+			Org:         *org,
+			Profile:     *profile,
+			Grant:       *grant,
+			Score:       score,
+			RAGContext:  ragContext,
+			WordTarget:  req.WordTarget,
+			CustomNotes: req.CustomNotes,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("openai generate: %w", err)
+		}
+		content = result.Content
+		model = result.Model
+		wc = result.WordCount
+		ti = result.TokensIn
+		to = result.TokensOut
+	}
+
+	if content == "" {
+		return nil, fmt.Errorf("no LLM client configured")
+	}
+
 	narrative, err := s.applications.CreateNarrative(ctx, repository.CreateNarrativeParams{
 		OrgID:         req.OrgID,
 		GrantID:       req.GrantID,
 		ApplicationID: req.ApplicationID,
 		SectionKey:    req.Section,
-		Content:       result.Content,
+		Content:       content,
 		WordCount:     &wc,
-		ModelUsed:     result.Model,
+		ModelUsed:     model,
 		TokensIn:      &ti,
 		TokensOut:     &to,
 	})

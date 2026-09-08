@@ -115,8 +115,8 @@ func main() {
 	productSvc := service.NewProductService(productRepo)
 
 	var narrativeSvc *service.NarrativeService
-	if claudeClient != nil {
-		narrativeSvc = service.NewNarrativeService(orgRepo, grantRepo, scoreRepo, appRepo, claudeClient, grantSvc)
+	if claudeClient != nil || openAIScoringClient != nil {
+		narrativeSvc = service.NewNarrativeService(orgRepo, grantRepo, scoreRepo, appRepo, claudeClient, openAIScoringClient, grantSvc)
 	}
 
 	// --- Handlers ---
