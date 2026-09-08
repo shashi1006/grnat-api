@@ -147,7 +147,7 @@ func (r *organizationRepo) UpsertProfile(ctx context.Context, p repository.Upser
 
 	row := r.db.QueryRow(ctx, q,
 		p.OrgID, p.AnnualBudget, p.NumEmployees, p.NumVolunteers, p.YearsOperating,
-		p.PopulationsServed, p.ServiceAreas, p.ProgramAreas, p.FocusIssues,
+		defaultEmpty(p.PopulationsServed), defaultEmpty(p.ServiceAreas), defaultEmpty(p.ProgramAreas), defaultEmpty(p.FocusIssues),
 		p.Has501c3, p.HasAuditedFinancials, p.HasIndirectCostRate,
 		p.IndirectCostRatePct, p.PriorFederalGrants, p.Narrative, emb,
 	)
