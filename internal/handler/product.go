@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"encoding/json"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/readygeneration/readygeneration-backend/internal/repository"
@@ -73,11 +75,18 @@ func (h *ProductHandler) SaveProductSelection(c *gin.Context) {
 		return
 	}
 
+	// Read the raw body once so we can try both formats without hitting EOF
+	rawBody, err := c.GetRawData()
+	if err != nil {
+		response.BadRequest(c, "failed to read request body")
+		return
+	}
+
 	// Try batch format first: { "selections": [...] }
 	var batch struct {
 		Selections []saveSelectionRequest `json:"selections"`
 	}
-	if err := c.ShouldBindJSON(&batch); err == nil && len(batch.Selections) > 0 {
+	if err := json.Unmarshal(rawBody, &batch); err == nil && len(batch.Selections) > 0 {
 		var saved []interface{}
 		for _, req := range batch.Selections {
 			productID, err := uuid.Parse(req.ProductID)
@@ -105,9 +114,15 @@ func (h *ProductHandler) SaveProductSelection(c *gin.Context) {
 		return
 	}
 
+	// Empty selections is a valid no-op
+	if len(batch.Selections) == 0 {
+		response.OK(c, []interface{}{})
+		return
+	}
+
 	// Fall back to single selection format
 	var req saveSelectionRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := json.Unmarshal(rawBody, &req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
