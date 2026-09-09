@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/readygeneration/readygeneration-backend/internal/domain"
@@ -274,13 +274,25 @@ type UpsertScoreParams struct {
 
 type ScoredGrant struct {
 	domain.CompatibilityScore
-	GrantTitle  string
-	FunderName  string
-	Category    *string
-	Deadline    *time.Time
-	MinAward    *int64
-	MaxAward    *int64
-	GrantStatus string
+
+	// Extra grant fields for the top-grants response.
+	Slug             string   `json:"-"`
+	Title            string   `json:"-"`
+	FunderName       string   `json:"-"`
+	FunderType       string   `json:"-"`
+	Agency           *string  `json:"-"`
+	Description      *string  `json:"-"`
+	Category         *string  `json:"-"`
+	FocusAreas       []string `json:"-"`
+	EligibleOrgTypes []string `json:"-"`
+	MinAwardAmount   *int64   `json:"-"`
+	MaxAwardAmount   *int64   `json:"-"`
+	ApplicationURL   *string  `json:"-"`
+	GrantStatus      string   `json:"-"`
+	Deadline         *string  `json:"-"`
+	DifficultyLevel  string   `json:"-"`
+	CompetitionLevel string   `json:"-"`
+	Tags             []string `json:"-"`
 }
 
 type ScoredOrg struct {
@@ -491,4 +503,46 @@ type SaveSelectionParams struct {
 	Quantity        int32
 	UnitPriceCents  int64
 	SubtotalCents   int64
+}
+
+// MarshalJSON emits a shape compatible with the Flutter Grant.fromJson:
+// the grant id is surfaced as "id", and score fields are preserved alongside
+// the grant-level fields needed by the card.
+func (sg ScoredGrant) MarshalJSON() ([]byte, error) {
+	b, err := json.Marshal(sg.CompatibilityScore)
+	if err != nil {
+		return nil, err
+	}
+	var m map[string]any
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+
+	m["id"] = sg.CompatibilityScore.GrantID
+	m["slug"] = sg.Slug
+	m["title"] = sg.Title
+	m["funder_name"] = sg.FunderName
+	m["funder_type"] = sg.FunderType
+	m["agency"] = sg.Agency
+	m["description"] = sg.Description
+	m["category"] = sg.Category
+	m["focus_areas"] = nonil(sg.FocusAreas)
+	m["eligible_org_types"] = nonil(sg.EligibleOrgTypes)
+	m["min_award_amount"] = sg.MinAwardAmount
+	m["max_award_amount"] = sg.MaxAwardAmount
+	m["application_url"] = sg.ApplicationURL
+	m["status"] = sg.GrantStatus
+	m["deadline"] = sg.Deadline
+	m["difficulty_level"] = sg.DifficultyLevel
+	m["competition_level"] = sg.CompetitionLevel
+	m["tags"] = nonil(sg.Tags)
+
+	return json.Marshal(m)
+}
+
+func nonil(s []string) []string {
+	if s == nil {
+		return []string{}
+	}
+	return s
 }

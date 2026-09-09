@@ -70,7 +70,9 @@ func (r *scoringRepo) ListTopGrantsForOrg(ctx context.Context, orgID uuid.UUID, 
 		SELECT cs.id, cs.org_id, cs.grant_id, cs.total_score, cs.tier, cs.dimension_scores,
 		       cs.disqualified, cs.disqualify_reasons, cs.strengths, cs.gaps, cs.recommendations,
 		       cs.semantic_score, cs.engine_version, cs.computed_at, cs.created_at, cs.updated_at,
-		       g.title, g.funder_name, g.category, g.deadline, g.min_award_amount, g.max_award_amount, g.status
+		       g.slug, g.title, g.funder_name, g.funder_type, g.agency, g.description, g.category,
+		       g.focus_areas, g.eligible_org_types, g.min_award_amount, g.max_award_amount, g.application_url,
+		       g.status, g.deadline::text, g.difficulty_level, g.competition_level, g.tags
 		FROM compatibility_scores cs
 		JOIN grants g ON g.id = cs.grant_id
 		WHERE cs.org_id=$1 AND g.status='active'
@@ -85,7 +87,11 @@ func (r *scoringRepo) ListTopGrantsForOrg(ctx context.Context, orgID uuid.UUID, 
 	var results []*repository.ScoredGrant
 	for rows.Next() {
 		var sg repository.ScoredGrant
-		score, err := scanScoreWithExtra(rows, &sg.GrantTitle, &sg.FunderName, &sg.Category, &sg.Deadline, &sg.MinAward, &sg.MaxAward, &sg.GrantStatus)
+		score, err := scanScoreWithExtra(rows,
+			&sg.Slug, &sg.Title, &sg.FunderName, &sg.FunderType, &sg.Agency, &sg.Description, &sg.Category,
+			&sg.FocusAreas, &sg.EligibleOrgTypes, &sg.MinAwardAmount, &sg.MaxAwardAmount, &sg.ApplicationURL,
+			&sg.GrantStatus, &sg.Deadline, &sg.DifficultyLevel, &sg.CompetitionLevel, &sg.Tags,
+		)
 		if err != nil {
 			return nil, err
 		}
