@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/readygeneration/readygeneration-backend/internal/domain"
@@ -276,7 +277,7 @@ type ScoredGrant struct {
 	GrantTitle  string
 	FunderName  string
 	Category    *string
-	Deadline    *string
+	Deadline    *time.Time
 	MinAward    *int64
 	MaxAward    *int64
 	GrantStatus string

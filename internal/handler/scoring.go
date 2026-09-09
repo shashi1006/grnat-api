@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/readygeneration/readygeneration-backend/internal/middleware"
@@ -93,6 +95,7 @@ func (h *ScoringHandler) ListTopGrants(c *gin.Context) {
 	limit, offset := parsePagination(c)
 	grants, err := h.scoringSvc.ListTopGrantsForOrg(c.Request.Context(), orgID, int32(limit), int32(offset))
 	if err != nil {
+		log.Printf("[ERROR] ListTopGrantsForOrg org=%s: %v", orgID, err)
 		response.InternalError(c, err)
 		return
 	}
