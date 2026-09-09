@@ -20,7 +20,9 @@ $SSH $SERVER "sudo systemctl stop rg-api || true"
 
 echo "==> Uploading binary + migrations..."
 $SCP /tmp/rg-api       $SERVER:$APP_DIR/api
-$SCP migrations/       $SERVER:$APP_DIR/migrations
+$SSH $SERVER "rm -rf $APP_DIR/migrations_new && mkdir -p $APP_DIR/migrations_new"
+$SCP migrations/*.sql  $SERVER:$APP_DIR/migrations_new/
+$SSH $SERVER "rm -rf $APP_DIR/migrations && mv $APP_DIR/migrations_new $APP_DIR/migrations"
 $SCP deploy/docker-compose.prod.yml $SERVER:$APP_DIR/docker-compose.yml
 $SCP deploy/nginx.conf $SERVER:$APP_DIR/nginx.conf
 $SCP deploy/rg-api.service $SERVER:/tmp/rg-api.service
@@ -46,7 +48,7 @@ echo "==> Waiting for Postgres to be ready..."
 $SSH $SERVER "sleep 6"
 
 echo "==> Running database migrations..."
-$SSH $SERVER "set -a && . $APP_DIR/.env && set +a && MIGRATE_ONLY=true $APP_DIR/api"
+$SSH $SERVER "cd $APP_DIR && set -a && . .env && set +a && MIGRATE_ONLY=true ./api"
 
 echo "==> (Re)starting API service..."
 $SSH $SERVER "sudo systemctl restart rg-api && sudo systemctl status rg-api --no-pager"
