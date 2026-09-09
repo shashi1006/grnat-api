@@ -73,8 +73,8 @@ func (r *scoringRepo) ListTopGrantsForOrg(ctx context.Context, orgID uuid.UUID, 
 		       g.title, g.funder_name, g.category, g.deadline, g.min_award_amount, g.max_award_amount, g.status
 		FROM compatibility_scores cs
 		JOIN grants g ON g.id = cs.grant_id
-		WHERE cs.org_id=$1 AND cs.disqualified=FALSE AND g.status='active'
-		ORDER BY cs.total_score DESC LIMIT $2 OFFSET $3`
+		WHERE cs.org_id=$1 AND g.status='active'
+		ORDER BY cs.disqualified ASC, cs.total_score DESC LIMIT $2 OFFSET $3`
 
 	rows, err := r.db.Query(ctx, q, orgID, limit, offset)
 	if err != nil {
