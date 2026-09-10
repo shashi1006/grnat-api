@@ -170,6 +170,84 @@ func TestScoreTierFromScore(t *testing.T) {
 	}
 }
 
+// Program areas and grant tags are authored in different vocabularies
+// ("Bleeding Control" vs "bleeding"), so matching must normalise rather than
+// compare exact strings.
+func TestEngine_ProgramArea_MatchesGrantTagsAcrossVocabularies(t *testing.T) {
+	e := scoring.NewEngine()
+	profile := domain.OrganizationProfile{
+		ProgramAreas: []string{"Bleeding Control", "Choking Response"},
+	}
+	grant := domain.Grant{
+		ID:         uuid.New(),
+		FocusAreas: []string{"school safety"},
+		Tags:       []string{"bleeding", "choking", "training"},
+	}
+
+	dim := programAreaDim(t, e.Compute(domain.ScoringInput{
+		Org: baseOrg(), Profile: profile, Grant: grant,
+	}))
+
+	if dim.Score != 100 {
+		t.Errorf("expected both program areas to align via tags, got %.1f (%s)", dim.Score, dim.Explanation)
+	}
+}
+
+func TestEngine_ProgramArea_PartialTagAlignment(t *testing.T) {
+	e := scoring.NewEngine()
+	profile := domain.OrganizationProfile{
+		ProgramAreas: []string{"Bleeding Control", "Choking Response"},
+	}
+	// This grant funds bleeding control but not choking response.
+	grant := domain.Grant{
+		ID:         uuid.New(),
+		FocusAreas: []string{"school safety"},
+		Tags:       []string{"bleeding", "training"},
+	}
+
+	dim := programAreaDim(t, e.Compute(domain.ScoringInput{
+		Org: baseOrg(), Profile: profile, Grant: grant,
+	}))
+
+	if dim.Score != 50 {
+		t.Errorf("expected 1 of 2 program areas to align (50), got %.1f (%s)", dim.Score, dim.Explanation)
+	}
+}
+
+// A grant that funds none of the org's program areas must not score the same
+// as one that funds all of them — this is what makes ranking meaningful.
+func TestEngine_ProgramArea_UnrelatedGrantScoresLower(t *testing.T) {
+	e := scoring.NewEngine()
+	profile := domain.OrganizationProfile{
+		ProgramAreas: []string{"Bleeding Control"},
+	}
+	aligned := domain.Grant{ID: uuid.New(), FocusAreas: []string{"safety"}, Tags: []string{"bleeding"}}
+	unrelated := domain.Grant{ID: uuid.New(), FocusAreas: []string{"safety"}, Tags: []string{"housing"}}
+
+	alignedDim := programAreaDim(t, e.Compute(domain.ScoringInput{
+		Org: baseOrg(), Profile: profile, Grant: aligned,
+	}))
+	unrelatedDim := programAreaDim(t, e.Compute(domain.ScoringInput{
+		Org: baseOrg(), Profile: profile, Grant: unrelated,
+	}))
+
+	if alignedDim.Score <= unrelatedDim.Score {
+		t.Errorf("aligned grant (%.1f) should outscore unrelated grant (%.1f)",
+			alignedDim.Score, unrelatedDim.Score)
+	}
+}
+
+func programAreaDim(t *testing.T, result domain.ScoringResult) domain.DimensionScore {
+	t.Helper()
+	for _, d := range result.DimensionScores {
+		if d.Key == "program_area_match" {
+			return d
+		}
+	}
+	t.Fatal("program_area_match dimension not found")
+	return domain.DimensionScore{}
+}
+
 func baseOrg() domain.Organization {
 	state := "CA"
 	return domain.Organization{

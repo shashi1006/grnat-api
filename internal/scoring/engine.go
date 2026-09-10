@@ -6,6 +6,8 @@ package scoring
 import (
 	"fmt"
 	"math"
+	"strings"
+	"unicode"
 
 	"github.com/readygeneration/readygeneration-backend/internal/domain"
 )
@@ -167,23 +169,37 @@ func (e *Engine) scoreProgramArea(input domain.ScoringInput) domain.DimensionSco
 	g := input.Grant
 	p := input.Profile
 
-	if len(g.FocusAreas) == 0 {
+	// A grant describes what it funds through both focus_areas and tags. Tags
+	// carry the finer-grained vocabulary (e.g. "bleeding", "aed") that org
+	// program areas are most likely to align with, so consider both.
+	grantTerms := append(append([]string{}, g.FocusAreas...), g.Tags...)
+
+	if len(grantTerms) == 0 {
 		return domain.DimensionScore{Key: "program_area_match", Score: 80, MaxScore: 100, Weight: weight, Explanation: "Grant has broad focus areas"}
 	}
 	if len(p.ProgramAreas) == 0 {
 		return domain.DimensionScore{Key: "program_area_match", Score: 20, MaxScore: 100, Weight: weight, Explanation: "Organization has not specified program areas"}
 	}
 
-	overlap := countOverlap(g.FocusAreas, p.ProgramAreas)
-	score := math.Min(100, float64(overlap)/float64(len(g.FocusAreas))*100)
-	if overlap == 0 {
-		// Partial credit if org focus issues overlap
-		issueOverlap := countOverlap(g.FocusAreas, p.FocusIssues)
-		if issueOverlap > 0 {
+	// Score by how much of what the organization does this grant actually
+	// funds. Dividing by the grant's term count instead would unfairly penalise
+	// broadly-scoped grants simply for listing more focus areas and tags.
+	matched := matchTerms(p.ProgramAreas, grantTerms)
+	score := float64(len(matched)) / float64(len(p.ProgramAreas)) * 100
+
+	explanation := fmt.Sprintf("%d of %d program areas align: %s",
+		len(matched), len(p.ProgramAreas), strings.Join(matched, ", "))
+
+	if len(matched) == 0 {
+		explanation = "No program areas align with this grant's focus"
+		// Partial credit when the org's broader focus issues still relate.
+		if len(matchTerms(p.FocusIssues, grantTerms)) > 0 {
 			score = 30
+			explanation = "Related focus issues align, but no direct program area match"
 		}
 	}
-	return domain.DimensionScore{Key: "program_area_match", Score: score, MaxScore: 100, Weight: weight, Explanation: fmt.Sprintf("%d program areas align", overlap)}
+
+	return domain.DimensionScore{Key: "program_area_match", Score: score, MaxScore: 100, Weight: weight, Explanation: explanation}
 }
 
 func (e *Engine) scoreFinancialReadiness(input domain.ScoringInput) domain.DimensionScore {
@@ -342,6 +358,78 @@ func countOverlap(a, b []string) int {
 		}
 	}
 	return n
+}
+
+// minSignificantToken is the shortest word treated as meaningful when comparing
+// vocabulary terms. It filters out noise like "of", "and", "the".
+const minSignificantToken = 4
+
+// normalizeTerm lowercases a vocabulary term and reduces any run of
+// non-alphanumeric characters to a single space, so that terms which differ
+// only in formatting compare equal (e.g. "Bleeding-Control" and "bleeding control").
+func normalizeTerm(s string) string {
+	var b strings.Builder
+	lastSpace := true
+	for _, r := range strings.ToLower(strings.TrimSpace(s)) {
+		switch {
+		case unicode.IsLetter(r) || unicode.IsDigit(r):
+			b.WriteRune(r)
+			lastSpace = false
+		case !lastSpace:
+			b.WriteRune(' ')
+			lastSpace = true
+		}
+	}
+	return strings.TrimSpace(b.String())
+}
+
+// significantTokens returns the meaningful words of a normalized term.
+func significantTokens(s string) []string {
+	var out []string
+	for _, tok := range strings.Fields(s) {
+		if len(tok) >= minSignificantToken {
+			out = append(out, tok)
+		}
+	}
+	return out
+}
+
+// termsRelated reports whether two vocabulary terms refer to the same concept.
+// Terms match when they are equal once normalized, or when they share a
+// significant word. This lets an organization's "Bleeding Control" program area
+// align with a grant tagged "bleeding" without requiring both sides to use an
+// identical controlled vocabulary.
+func termsRelated(a, b string) bool {
+	na, nb := normalizeTerm(a), normalizeTerm(b)
+	if na == "" || nb == "" {
+		return false
+	}
+	if na == nb {
+		return true
+	}
+	for _, ta := range significantTokens(na) {
+		for _, tb := range significantTokens(nb) {
+			if ta == tb {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// matchTerms returns the entries of want that are related to at least one
+// entry of have, preserving the original wording for display.
+func matchTerms(want, have []string) []string {
+	var matched []string
+	for _, w := range want {
+		for _, h := range have {
+			if termsRelated(w, h) {
+				matched = append(matched, w)
+				break
+			}
+		}
+	}
+	return matched
 }
 
 func nonNil(s []string) []string {
