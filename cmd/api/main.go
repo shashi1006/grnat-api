@@ -107,7 +107,7 @@ func main() {
 	emailSvc := service.NewEmailService(cfg.Email)
 	authSvc := service.NewAuthService(userRepo, jwtMgr, cfg.Firebase.WebAPIKey, cfg.App.FrontendURL, emailSvc)
 	grantSvc := service.NewGrantService(grantRepo, embedSvc, ragEngine)
-	scoringSvc := service.NewScoringService(orgRepo, grantRepo, scoreRepo, scoringEngine, claudeClient, openAIScoringClient, grantSvc)
+	scoringSvc := service.NewScoringService(orgRepo, grantRepo, scoreRepo, productRepo, scoringEngine, claudeClient, openAIScoringClient, grantSvc)
 	orgSvc := service.NewOrgService(orgRepo, embedSvc)
 	appSvc := service.NewApplicationService(appRepo, grantRepo, scoreRepo)
 	leadSvc := service.NewLeadService(leadRepo)
@@ -116,7 +116,7 @@ func main() {
 
 	var narrativeSvc *service.NarrativeService
 	if claudeClient != nil || openAIScoringClient != nil {
-		narrativeSvc = service.NewNarrativeService(orgRepo, grantRepo, scoreRepo, appRepo, claudeClient, openAIScoringClient, grantSvc)
+		narrativeSvc = service.NewNarrativeService(orgRepo, grantRepo, scoreRepo, appRepo, productRepo, claudeClient, openAIScoringClient, grantSvc)
 	}
 
 	// --- Handlers ---

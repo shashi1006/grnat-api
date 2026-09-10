@@ -17,6 +17,7 @@ type GrantFitRequest struct {
 	Grant      domain.Grant
 	Score      *domain.CompatibilityScore
 	RAGContext string
+	Products   []domain.ProductSelectionContext
 }
 
 // GrantFitResult holds the LLM-generated fit score and rationale.
@@ -153,6 +154,25 @@ func buildGrantFitPrompt(req GrantFitRequest) string {
 		if len(req.Score.Gaps) > 0 {
 			b.WriteString("Gaps: " + strings.Join(req.Score.Gaps, "; ") + "\n")
 		}
+	}
+
+	if len(req.Products) > 0 {
+		b.WriteString("\n## SELECTED SOLUTIONS & PRODUCTS\n")
+		b.WriteString("The organization plans to deploy the following preparedness solutions. " +
+			"Consider how well these products align with the grant's goals and priorities.\n\n")
+		for i, p := range req.Products {
+			b.WriteString(fmt.Sprintf("%d. %s (Qty: %d, Unit Cost: $%s, Subtotal: $%s)\n", i+1, p.Name, p.Quantity, p.UnitPrice, p.Subtotal))
+			if p.Description != "" {
+				b.WriteString(fmt.Sprintf("   Description: %s\n", p.Description))
+			}
+			if p.Category != "" {
+				b.WriteString(fmt.Sprintf("   Category: %s\n", p.Category))
+			}
+			if len(p.FundingAlignment) > 0 {
+				b.WriteString(fmt.Sprintf("   Funding Alignment: %s\n", strings.Join(p.FundingAlignment, ", ")))
+			}
+		}
+		b.WriteString("\n")
 	}
 
 	if req.RAGContext != "" {

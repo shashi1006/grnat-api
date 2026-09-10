@@ -20,6 +20,7 @@ type ScoringService struct {
 	orgs         repository.OrganizationRepo
 	grants       repository.GrantRepo
 	scores       repository.ScoringRepo
+	products     repository.ProductRepo
 	engine       *scoring.Engine
 	claudeClient *claude.Client
 	openAIClient *openai.Client
@@ -31,6 +32,7 @@ func NewScoringService(
 	orgs repository.OrganizationRepo,
 	grants repository.GrantRepo,
 	scores repository.ScoringRepo,
+	products repository.ProductRepo,
 	engine *scoring.Engine,
 	claudeClient *claude.Client,
 	openAIClient *openai.Client,
@@ -40,6 +42,7 @@ func NewScoringService(
 		orgs:         orgs,
 		grants:       grants,
 		scores:       scores,
+		products:     products,
 		engine:       engine,
 		claudeClient: claudeClient,
 		openAIClient: openAIClient,
@@ -193,7 +196,7 @@ func (s *ScoringService) EnrichTopGrantsWithLLM(ctx context.Context, orgID uuid.
 			continue
 		}
 
-		llmScore, rationale, err := s.scoreLLM(ctx, *org, *profile, *grant, &sg.CompatibilityScore)
+		llmScore, rationale, err := s.scoreLLM(ctx, *org, *profile, *grant, &sg.CompatibilityScore, orgID)
 		if err != nil {
 			result.Errors = append(result.Errors, fmt.Sprintf("grant %s: %v", grant.ID, err))
 			result.Skipped++
@@ -227,12 +230,14 @@ func (s *ScoringService) EnrichTopGrantsWithLLM(ctx context.Context, orgID uuid.
 }
 
 // scoreLLM calls an LLM (Claude preferred, OpenAI fallback) to produce a qualitative fit score.
-func (s *ScoringService) scoreLLM(ctx context.Context, org domain.Organization, profile domain.OrganizationProfile, grant domain.Grant, score *domain.CompatibilityScore) (float64, string, error) {
+func (s *ScoringService) scoreLLM(ctx context.Context, org domain.Organization, profile domain.OrganizationProfile, grant domain.Grant, score *domain.CompatibilityScore, orgID uuid.UUID) (float64, string, error) {
 	ragQuery := buildFitRAGQuery(grant)
 	ragContext := ""
 	if s.grantSvc != nil {
 		ragContext, _ = s.grantSvc.QueryNOFO(ctx, grant.ID, ragQuery, 3)
 	}
+
+	productCtx := s.buildProductContext(ctx, orgID)
 
 	// Try Claude first
 	if s.claudeClient != nil {
@@ -242,6 +247,7 @@ func (s *ScoringService) scoreLLM(ctx context.Context, org domain.Organization, 
 			Grant:      grant,
 			Score:      score,
 			RAGContext: ragContext,
+			Products:   productCtx,
 		})
 		if err == nil {
 			return fit.Score, fit.Rationale, nil
@@ -259,11 +265,52 @@ func (s *ScoringService) scoreLLM(ctx context.Context, org domain.Organization, 
 		Grant:      grant,
 		Score:      score,
 		RAGContext: ragContext,
+		Products:   productCtx,
 	})
 	if err != nil {
 		return 0, "", err
 	}
 	return fit.Score, fit.Rationale, nil
+}
+
+// buildProductContext fetches the org's product selections enriched with catalog
+// details for inclusion in LLM scoring prompts.
+func (s *ScoringService) buildProductContext(ctx context.Context, orgID uuid.UUID) []domain.ProductSelectionContext {
+	if s.products == nil {
+		return nil
+	}
+	selections, err := s.products.ListSelections(ctx, orgID)
+	if err != nil || len(selections) == 0 {
+		return nil
+	}
+
+	out := make([]domain.ProductSelectionContext, 0, len(selections))
+	for _, sel := range selections {
+		product, err := s.products.GetByID(ctx, sel.ProductID)
+		if err != nil || product == nil {
+			continue
+		}
+		p := domain.ProductSelectionContext{
+			Name:           product.Name,
+			Quantity:       sel.Quantity,
+			UnitPrice:      fmt.Sprintf("%d.%02d", sel.UnitPriceCents/100, sel.UnitPriceCents%100),
+			Subtotal:       fmt.Sprintf("%d.%02d", sel.SubtotalCents/100, sel.SubtotalCents%100),
+			SelectedAddons: sel.SelectedAddons,
+		}
+		if product.Description != nil {
+			p.Description = *product.Description
+		} else if product.ShortDesc != nil {
+			p.Description = *product.ShortDesc
+		}
+		if product.Category != nil {
+			p.Category = *product.Category
+		}
+		if len(product.FundingAlignment) > 0 {
+			p.FundingAlignment = product.FundingAlignment
+		}
+		out = append(out, p)
+	}
+	return out
 }
 
 // applyLLMToScore blends an LLM alignment dimension into an existing compatibility score.

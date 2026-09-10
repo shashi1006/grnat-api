@@ -18,6 +18,7 @@ type NarrativeRequest struct {
 	RAGContext  string // relevant NOFO passages retrieved via vector search
 	WordTarget  int
 	CustomNotes string
+	Products    []domain.ProductSelectionContext // selected solutions/products
 }
 
 // NarrativeResult holds the generated text and metadata.
@@ -128,6 +129,29 @@ func buildUserPrompt(req NarrativeRequest) string {
 				b.WriteString(fmt.Sprintf("- %s\n", s))
 			}
 		}
+	}
+
+	// Selected products / solutions
+	if len(req.Products) > 0 {
+		b.WriteString("\n## SELECTED SOLUTIONS & PRODUCTS\n")
+		b.WriteString("The organization has selected the following preparedness solutions to deploy. " +
+			"Explain how these products address the grant's specific needs and priorities.\n\n")
+		for i, p := range req.Products {
+			b.WriteString(fmt.Sprintf("%d. %s (Qty: %d, Unit Cost: $%s, Subtotal: $%s)\n", i+1, p.Name, p.Quantity, p.UnitPrice, p.Subtotal))
+			if p.Description != "" {
+				b.WriteString(fmt.Sprintf("   Description: %s\n", p.Description))
+			}
+			if p.Category != "" {
+				b.WriteString(fmt.Sprintf("   Category: %s\n", p.Category))
+			}
+			if len(p.FundingAlignment) > 0 {
+				b.WriteString(fmt.Sprintf("   Funding Alignment: %s\n", strings.Join(p.FundingAlignment, ", ")))
+			}
+			if len(p.SelectedAddons) > 0 {
+				b.WriteString(fmt.Sprintf("   Add-ons: %s\n", strings.Join(p.SelectedAddons, ", ")))
+			}
+		}
+		b.WriteString("\n")
 	}
 
 	// Custom notes

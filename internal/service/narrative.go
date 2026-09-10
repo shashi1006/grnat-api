@@ -18,6 +18,7 @@ type NarrativeService struct {
 	grants       repository.GrantRepo
 	scores       repository.ScoringRepo
 	applications repository.ApplicationRepo
+	products     repository.ProductRepo
 	claudeClient *claude.Client
 	openAIClient *openai.Client
 	grantSvc     *GrantService
@@ -29,6 +30,7 @@ func NewNarrativeService(
 	grants repository.GrantRepo,
 	scores repository.ScoringRepo,
 	applications repository.ApplicationRepo,
+	products repository.ProductRepo,
 	claudeClient *claude.Client,
 	openAIClient *openai.Client,
 	grantSvc *GrantService,
@@ -38,6 +40,7 @@ func NewNarrativeService(
 		grants:       grants,
 		scores:       scores,
 		applications: applications,
+		products:     products,
 		claudeClient: claudeClient,
 		openAIClient: openAIClient,
 		grantSvc:     grantSvc,
@@ -79,6 +82,9 @@ func (s *NarrativeService) GenerateNarrative(ctx context.Context, req GenerateNa
 	ragQuery := buildRAGQuery(req.Section, *grant)
 	ragContext, _ := s.grantSvc.QueryNOFO(ctx, req.GrantID, ragQuery, 5)
 
+	// Fetch the org's selected products to pass as context to the LLM
+	productCtx := s.buildProductContext(ctx, req.OrgID)
+
 	var content string
 	var model string
 	var wc, ti, to int32
@@ -94,6 +100,7 @@ func (s *NarrativeService) GenerateNarrative(ctx context.Context, req GenerateNa
 			RAGContext:  ragContext,
 			WordTarget:  req.WordTarget,
 			CustomNotes: req.CustomNotes,
+			Products:    productCtx,
 		})
 		if err == nil {
 			content = result.Content
@@ -117,6 +124,7 @@ func (s *NarrativeService) GenerateNarrative(ctx context.Context, req GenerateNa
 			RAGContext:  ragContext,
 			WordTarget:  req.WordTarget,
 			CustomNotes: req.CustomNotes,
+			Products:    productCtx,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("openai generate: %w", err)
@@ -169,4 +177,52 @@ func buildRAGQuery(section domain.NarrativeSection, grant domain.Grant) string {
 		parts = append(parts, strings.Join(grant.FocusAreas, " "))
 	}
 	return strings.Join(parts, " ")
+}
+
+// buildProductContext fetches the org's product selections, enriches them with
+// catalog details (name, description, category, funding alignment), and returns
+// a slice suitable for inclusion in LLM prompts.
+func (s *NarrativeService) buildProductContext(ctx context.Context, orgID uuid.UUID) []domain.ProductSelectionContext {
+	if s.products == nil {
+		return nil
+	}
+	selections, err := s.products.ListSelections(ctx, orgID)
+	if err != nil || len(selections) == 0 {
+		return nil
+	}
+
+	out := make([]domain.ProductSelectionContext, 0, len(selections))
+	for _, sel := range selections {
+		product, err := s.products.GetByID(ctx, sel.ProductID)
+		if err != nil || product == nil {
+			continue
+		}
+		p := domain.ProductSelectionContext{
+			Name:           product.Name,
+			Quantity:       sel.Quantity,
+			UnitPrice:      formatCents(sel.UnitPriceCents),
+			Subtotal:       formatCents(sel.SubtotalCents),
+			SelectedAddons: sel.SelectedAddons,
+		}
+		if product.Description != nil {
+			p.Description = *product.Description
+		} else if product.ShortDesc != nil {
+			p.Description = *product.ShortDesc
+		}
+		if product.Category != nil {
+			p.Category = *product.Category
+		}
+		if len(product.FundingAlignment) > 0 {
+			p.FundingAlignment = product.FundingAlignment
+		}
+		out = append(out, p)
+	}
+	return out
+}
+
+// formatCents converts a cents amount to a USD string (e.g., 149900 -> "1,499.00").
+func formatCents(cents int64) string {
+	whole := cents / 100
+	frac := cents % 100
+	return fmt.Sprintf("%d.%02d", whole, frac)
 }

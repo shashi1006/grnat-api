@@ -47,3 +47,17 @@ type OrgProductSelection struct {
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 }
+
+// ProductSelectionContext is a flattened view of an org's product selection
+// plus the product catalog details, designed to be passed to LLM prompts so
+// the LLM can bridge selected solutions to a grant's specific needs.
+type ProductSelectionContext struct {
+	Name             string
+	Category         string
+	Description      string
+	Quantity         int32
+	UnitPrice        string // formatted USD
+	Subtotal         string // formatted USD
+	SelectedAddons   []string
+	FundingAlignment []string
+}
