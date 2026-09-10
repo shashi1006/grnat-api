@@ -150,6 +150,17 @@ func (s *ScoringService) ComputeAllGrantsForOrg(ctx context.Context, orgID uuid.
 		}
 	}
 
+	// Auto-trigger LLM enrichment after deterministic scoring so that the
+	// scores the user sees immediately after "Save & Score Grants" already
+	// include the LLM alignment dimension. Failures are non-fatal — the
+	// deterministic scores remain valid on their own.
+	if s.claudeClient != nil || s.openAIClient != nil {
+		if _, enrichErr := s.EnrichTopGrantsWithLLM(ctx, orgID, 50); enrichErr != nil {
+			// Log but don't fail — deterministic scores are still valid
+			fmt.Printf("[WARN] LLM enrichment after score-all failed for org %s: %v\n", orgID, enrichErr)
+		}
+	}
+
 	return computed, nil
 }
 

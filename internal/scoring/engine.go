@@ -395,10 +395,11 @@ func significantTokens(s string) []string {
 }
 
 // termsRelated reports whether two vocabulary terms refer to the same concept.
-// Terms match when they are equal once normalized, or when they share a
-// significant word. This lets an organization's "Bleeding Control" program area
-// align with a grant tagged "bleeding" without requiring both sides to use an
-// identical controlled vocabulary.
+// Terms match when they are equal once normalized, when they share a
+// significant word, or when they are connected through the synonym alias map
+// below. This lets an organization's "Bleeding Control" program area align
+// with a grant tagged "bleeding", and "Cardiac Response" align with "aed",
+// without requiring both sides to use an identical controlled vocabulary.
 func termsRelated(a, b string) bool {
 	na, nb := normalizeTerm(a), normalizeTerm(b)
 	if na == "" || nb == "" {
@@ -407,12 +408,105 @@ func termsRelated(a, b string) bool {
 	if na == nb {
 		return true
 	}
+	// Check synonym groups: if both terms (or their tokens) map to the same
+	// canonical alias, they are related.
+	if synonymMatch(na, nb) {
+		return true
+	}
 	for _, ta := range significantTokens(na) {
 		for _, tb := range significantTokens(nb) {
 			if ta == tb {
 				return true
 			}
+			if synonymMatch(ta, tb) {
+				return true
+			}
 		}
+	}
+	return false
+}
+
+// synonymAliases maps normalized terms and tokens to a canonical concept.
+// Any two terms that resolve to the same canonical concept are considered
+// related. This bridges the gap between wizard priority vocabulary (e.g.
+// "Cardiac Response") and grant tag vocabulary (e.g. "aed").
+var synonymAliases = map[string]string{
+	// Bleeding / hemorrhage control
+	"bleeding":   "hemorrhage",
+	"hemorrhage": "hemorrhage",
+	"bleed":      "hemorrhage",
+	"blood":      "hemorrhage",
+	// Cardiac / AED
+	"cardiac":          "cardiac",
+	"cardiac response": "cardiac",
+	"aed":              "cardiac",
+	"defibrillator":    "cardiac",
+	"defib":            "cardiac",
+	"heart":            "cardiac",
+	// Choking / airway
+	"choking":          "airway",
+	"airway":           "airway",
+	"choking response": "airway",
+	// Allergic / anaphylaxis / firstaid
+	"allergic":                  "allergic",
+	"anaphylaxis":               "allergic",
+	"severe allergic":           "allergic",
+	"severe allergic reactions": "allergic",
+	"epinephrine":               "allergic",
+	"firstaid":                  "allergic",
+	"first aid":                 "allergic",
+	"firstaid response":         "allergic",
+	// Emergency communications / notification
+	"emergency communications": "emergency_comms",
+	"communications":           "emergency_comms",
+	"communication":            "emergency_comms",
+	"notification":             "emergency_comms",
+	"alert":                    "emergency_comms",
+	"alerts":                   "emergency_comms",
+	"emergency alert":          "emergency_comms",
+	// Security / camera / training
+	"security":             "security",
+	"security integration": "security",
+	"camera":               "security",
+	"cameras":              "security",
+	"surveillance":         "security",
+	"training":             "security",
+	// Opioid / overdose / naloxone
+	"opioid":                   "opioid",
+	"overdose":                 "opioid",
+	"opioid overdose":          "opioid",
+	"opioid overdose response": "opioid",
+	"naloxone":                 "opioid",
+	// Event / community preparedness
+	"event":                        "event_prep",
+	"events":                       "event_prep",
+	"event community":              "event_prep",
+	"event community preparedness": "event_prep",
+	"community":                    "event_prep",
+	"community preparedness":       "event_prep",
+	"festival":                     "event_prep",
+	"gathering":                    "event_prep",
+	// Asthma / respiratory
+	"asthma":                 "respiratory",
+	"asthma attack":          "respiratory",
+	"asthma attack response": "respiratory",
+	"respiratory":            "respiratory",
+	// School safety
+	"school":        "school_safety",
+	"school safety": "school_safety",
+	// Government / nonprofit
+	"govt":       "government",
+	"government": "government",
+	"nonprofit":  "nonprofit",
+}
+
+// synonymMatch returns true if two normalized terms resolve to the same
+// canonical concept via the alias map.
+func synonymMatch(a, b string) bool {
+	ca, ok1 := synonymAliases[a]
+	cb, ok2 := synonymAliases[b]
+	if ok1 && ok2 && ca == cb {
+		return true
 	}
 	return false
 }

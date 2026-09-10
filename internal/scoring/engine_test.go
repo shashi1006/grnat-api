@@ -248,6 +248,109 @@ func programAreaDim(t *testing.T, result domain.ScoringResult) domain.DimensionS
 	return domain.DimensionScore{}
 }
 
+// Synonym matching: "Cardiac Response" should align with grant tag "aed"
+// even though they share no common tokens.
+func TestEngine_ProgramArea_SynonymMatch_CardiacAED(t *testing.T) {
+	e := scoring.NewEngine()
+	profile := domain.OrganizationProfile{
+		ProgramAreas: []string{"Cardiac Response"},
+	}
+	grant := domain.Grant{
+		ID:   uuid.New(),
+		Tags: []string{"aed"},
+	}
+
+	dim := programAreaDim(t, e.Compute(domain.ScoringInput{
+		Org: baseOrg(), Profile: profile, Grant: grant,
+	}))
+
+	if dim.Score != 100 {
+		t.Errorf("expected Cardiac Response to match 'aed' via synonyms (100), got %.1f (%s)", dim.Score, dim.Explanation)
+	}
+}
+
+// Synonym matching: "Security Integration" should align with "camera" and "training".
+func TestEngine_ProgramArea_SynonymMatch_SecurityCamera(t *testing.T) {
+	e := scoring.NewEngine()
+	profile := domain.OrganizationProfile{
+		ProgramAreas: []string{"Security Integration"},
+	}
+	grant := domain.Grant{
+		ID:   uuid.New(),
+		Tags: []string{"camera", "training"},
+	}
+
+	dim := programAreaDim(t, e.Compute(domain.ScoringInput{
+		Org: baseOrg(), Profile: profile, Grant: grant,
+	}))
+
+	if dim.Score != 100 {
+		t.Errorf("expected Security Integration to match 'camera'/'training' via synonyms (100), got %.1f (%s)", dim.Score, dim.Explanation)
+	}
+}
+
+// Synonym matching: "Emergency Communications" should align with "notification".
+func TestEngine_ProgramArea_SynonymMatch_CommsNotification(t *testing.T) {
+	e := scoring.NewEngine()
+	profile := domain.OrganizationProfile{
+		ProgramAreas: []string{"Emergency Communications"},
+	}
+	grant := domain.Grant{
+		ID:   uuid.New(),
+		Tags: []string{"notification"},
+	}
+
+	dim := programAreaDim(t, e.Compute(domain.ScoringInput{
+		Org: baseOrg(), Profile: profile, Grant: grant,
+	}))
+
+	if dim.Score != 100 {
+		t.Errorf("expected Emergency Communications to match 'notification' via synonyms (100), got %.1f (%s)", dim.Score, dim.Explanation)
+	}
+}
+
+// Synonym matching: "Severe Allergic Reactions" should align with "firstaid".
+func TestEngine_ProgramArea_SynonymMatch_AllergicFirstAid(t *testing.T) {
+	e := scoring.NewEngine()
+	profile := domain.OrganizationProfile{
+		ProgramAreas: []string{"Severe Allergic Reactions"},
+	}
+	grant := domain.Grant{
+		ID:   uuid.New(),
+		Tags: []string{"firstaid"},
+	}
+
+	dim := programAreaDim(t, e.Compute(domain.ScoringInput{
+		Org: baseOrg(), Profile: profile, Grant: grant,
+	}))
+
+	if dim.Score != 100 {
+		t.Errorf("expected Severe Allergic Reactions to match 'firstaid' via synonyms (100), got %.1f (%s)", dim.Score, dim.Explanation)
+	}
+}
+
+// Multiple priorities with partial synonym matches should produce differentiated scores.
+func TestEngine_ProgramArea_SynonymPartialMatch(t *testing.T) {
+	e := scoring.NewEngine()
+	profile := domain.OrganizationProfile{
+		ProgramAreas: []string{"Bleeding Control", "Cardiac Response", "Security Integration"},
+	}
+	// Grant has bleeding + aed but no camera/training
+	grant := domain.Grant{
+		ID:   uuid.New(),
+		Tags: []string{"bleeding", "aed"},
+	}
+
+	dim := programAreaDim(t, e.Compute(domain.ScoringInput{
+		Org: baseOrg(), Profile: profile, Grant: grant,
+	}))
+
+	// 2 of 3 should match: Bleeding Control→bleeding, Cardiac Response→aed
+	if dim.Score != 66.66666666666666 {
+		t.Errorf("expected 2 of 3 program areas to align via synonyms (66.67), got %.1f (%s)", dim.Score, dim.Explanation)
+	}
+}
+
 func baseOrg() domain.Organization {
 	state := "CA"
 	return domain.Organization{
