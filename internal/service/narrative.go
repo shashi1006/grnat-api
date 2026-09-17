@@ -224,5 +224,25 @@ func (s *NarrativeService) buildProductContext(ctx context.Context, orgID uuid.U
 func formatCents(cents int64) string {
 	whole := cents / 100
 	frac := cents % 100
-	return fmt.Sprintf("%d.%02d", whole, frac)
+	return fmt.Sprintf("%s,%02d", formatThousands(whole), frac)
+}
+
+// formatThousands adds comma separators to a whole-dollar amount.
+func formatThousands(n int64) string {
+	s := fmt.Sprintf("%d", n)
+	if n < 0 {
+		s = s[1:]
+	}
+	var out []byte
+	for i, c := range s {
+		if i > 0 && (len(s)-i)%3 == 0 {
+			out = append(out, ',')
+		}
+		out = append(out, byte(c))
+	}
+	result := string(out)
+	if n < 0 {
+		result = "-" + result
+	}
+	return result
 }

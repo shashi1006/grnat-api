@@ -66,7 +66,12 @@ Your writing is:
 
 You write in first person from the organization's perspective.
 Do not include section titles or headers in your response — only the narrative content itself.
-Do not fabricate statistics or data not provided in the context.`
+Do not fabricate statistics, dollar amounts, product names, equipment, or data not provided in the context.
+Only reference the specific solutions and products explicitly listed under SELECTED SOLUTIONS & PRODUCTS.
+Do not mention any additional products, equipment, stations, cabinets, pods, wall units, or systems not in that list.
+Do not use 'for instance', 'additionally', 'furthermore', 'such as', or similar transitions to introduce unselected products.
+If only one product is selected, only that one product may be discussed.
+Use the exact dollar amounts and quantities shown for the selected products; do not round, reformat, or drop digits.`
 }
 
 func buildUserPrompt(req NarrativeRequest) string {
@@ -171,6 +176,8 @@ func buildUserPrompt(req NarrativeRequest) string {
 	b.WriteString("Be specific to this organization and this grant opportunity.\n")
 	b.WriteString("Focus on outcomes, community impact, and organizational qualifications.\n")
 	b.WriteString("Do not include a title or header — begin directly with the narrative content.\n")
+	b.WriteString("Use exact product names, quantities, and dollar amounts from SELECTED SOLUTIONS & PRODUCTS.\n")
+	b.WriteString("When mentioning a subtotal, use the full figure exactly as shown (e.g., $18,800.00).\n")
 
 	return b.String()
 }
