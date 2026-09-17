@@ -65,9 +65,10 @@ type CompatibilityScore struct {
 
 // ScoringInput bundles the org and grant data needed by the scoring engine.
 type ScoringInput struct {
-	Org     Organization
-	Profile OrganizationProfile
-	Grant   Grant
+	Org      Organization
+	Profile  OrganizationProfile
+	Grant    Grant
+	Products []ProductSelectionContext
 }
 
 // ScoringResult is the raw output from the scoring engine before persistence.

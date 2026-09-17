@@ -24,13 +24,14 @@ func NewEngine() *Engine {
 
 // dimensions and their default weights (sum to 100 when all present)
 var defaultWeights = map[string]float64{
-	"org_type_match":      20.0,
-	"population_match":    18.0,
-	"geographic_match":    15.0,
-	"program_area_match":  15.0,
-	"financial_readiness": 12.0,
-	"org_capacity":        10.0,
-	"compliance_ready":    10.0,
+	"org_type_match":        15.0,
+	"population_match":      15.0,
+	"geographic_match":      12.0,
+	"program_area_match":    12.0,
+	"product_project_match": 18.0,
+	"financial_readiness":   10.0,
+	"org_capacity":          9.0,
+	"compliance_ready":      9.0,
 }
 
 // Compute scores an org/grant pair and returns a ScoringResult.
@@ -59,6 +60,7 @@ func (e *Engine) Compute(input domain.ScoringInput) domain.ScoringResult {
 		e.scorePopulation(input),
 		e.scoreGeographic(input),
 		e.scoreProgramArea(input),
+		e.scoreProductProjectMatch(input),
 		e.scoreFinancialReadiness(input),
 		e.scoreOrgCapacity(input),
 		e.scoreComplianceReadiness(input),
@@ -162,6 +164,43 @@ func (e *Engine) scoreGeographic(input domain.ScoringInput) domain.DimensionScor
 		return domain.DimensionScore{Key: "geographic_match", Score: 100, MaxScore: 100, Weight: weight, Explanation: "Organization is in an eligible state"}
 	}
 	return domain.DimensionScore{Key: "geographic_match", Score: 0, MaxScore: 100, Weight: weight, Explanation: "Organization state not in eligible states list"}
+}
+
+// scoreProductProjectMatch scores how well the selected products map to the
+// grant's focus areas and tags. Products carry their own funding alignment
+// vocabulary, so we match those terms against the grant's terms.
+func (e *Engine) scoreProductProjectMatch(input domain.ScoringInput) domain.DimensionScore {
+	weight := defaultWeights["product_project_match"]
+	g := input.Grant
+	products := input.Products
+
+	grantTerms := append(append([]string{}, g.FocusAreas...), g.Tags...)
+	if len(products) == 0 {
+		return domain.DimensionScore{Key: "product_project_match", Score: 20, MaxScore: 100, Weight: weight, Explanation: "No products selected — cannot evaluate project alignment"}
+	}
+	if len(grantTerms) == 0 {
+		return domain.DimensionScore{Key: "product_project_match", Score: 80, MaxScore: 100, Weight: weight, Explanation: "Grant has broad focus areas — selected products may align"}
+	}
+
+	matched := 0
+	var matchedNames []string
+	for _, p := range products {
+		productTerms := append([]string{p.Name, p.Category}, p.FundingAlignment...)
+		if len(productTerms) == 0 {
+			continue
+		}
+		if len(matchTerms(productTerms, grantTerms)) > 0 {
+			matched++
+			matchedNames = append(matchedNames, p.Name)
+		}
+	}
+
+	score := float64(matched) / float64(len(products)) * 100
+	explanation := fmt.Sprintf("%d of %d selected products align: %s", matched, len(products), strings.Join(matchedNames, ", "))
+	if matched == 0 {
+		explanation = "Selected products do not align with this grant's focus areas"
+	}
+	return domain.DimensionScore{Key: "product_project_match", Score: score, MaxScore: 100, Weight: weight, Explanation: explanation}
 }
 
 func (e *Engine) scoreProgramArea(input domain.ScoringInput) domain.DimensionScore {

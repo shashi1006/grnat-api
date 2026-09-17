@@ -66,10 +66,12 @@ func (s *ScoringService) ComputeScore(ctx context.Context, orgID, grantID uuid.U
 		return nil, fmt.Errorf("get grant: %w", err)
 	}
 
+	products, _ := s.buildProductContext(ctx, orgID)
 	result := s.engine.Compute(domain.ScoringInput{
-		Org:     *org,
-		Profile: *profile,
-		Grant:   *grant,
+		Org:      *org,
+		Profile:  *profile,
+		Grant:    *grant,
+		Products: products,
 	})
 
 	saved, err := s.scores.Upsert(ctx, repository.UpsertScoreParams{
@@ -119,10 +121,12 @@ func (s *ScoringService) ComputeAllGrantsForOrg(ctx context.Context, orgID uuid.
 		}
 
 		for _, grant := range grants {
+			products, _ := s.buildProductContext(ctx, orgID)
 			result := s.engine.Compute(domain.ScoringInput{
-				Org:     *org,
-				Profile: *profile,
-				Grant:   *grant,
+				Org:      *org,
+				Profile:  *profile,
+				Grant:    *grant,
+				Products: products,
 			})
 			_, err := s.scores.Upsert(ctx, repository.UpsertScoreParams{
 				OrgID:             orgID,
