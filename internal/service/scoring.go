@@ -248,17 +248,19 @@ func (s *ScoringService) scoreLLM(ctx context.Context, org domain.Organization, 
 		ragContext, _ = s.grantSvc.QueryNOFO(ctx, grant.ID, ragQuery, 3)
 	}
 
-	productCtx := s.buildProductContext(ctx, orgID)
+	productCtx, projectCostCents := s.buildProductContext(ctx, orgID)
+	projectCost := formatCents(projectCostCents)
 
 	// Try Claude first
 	if s.claudeClient != nil {
 		fit, err := s.claudeClient.ScoreGrantFit(ctx, claude.GrantFitRequest{
-			Org:        org,
-			Profile:    profile,
-			Grant:      grant,
-			Score:      score,
-			RAGContext: ragContext,
-			Products:   productCtx,
+			Org:         org,
+			Profile:     profile,
+			Grant:       grant,
+			Score:       score,
+			RAGContext:  ragContext,
+			Products:    productCtx,
+			ProjectCost: projectCost,
 		})
 		if err == nil {
 			return fit.Score, fit.Rationale, nil
@@ -271,12 +273,13 @@ func (s *ScoringService) scoreLLM(ctx context.Context, org domain.Organization, 
 
 	// OpenAI fallback
 	fit, err := s.openAIClient.ScoreGrantFit(ctx, openai.GrantFitRequest{
-		Org:        org,
-		Profile:    profile,
-		Grant:      grant,
-		Score:      score,
-		RAGContext: ragContext,
-		Products:   productCtx,
+		Org:         org,
+		Profile:     profile,
+		Grant:       grant,
+		Score:       score,
+		RAGContext:  ragContext,
+		Products:    productCtx,
+		ProjectCost: projectCost,
 	})
 	if err != nil {
 		return 0, "", err
@@ -285,27 +288,30 @@ func (s *ScoringService) scoreLLM(ctx context.Context, org domain.Organization, 
 }
 
 // buildProductContext fetches the org's product selections enriched with catalog
-// details for inclusion in LLM scoring prompts.
-func (s *ScoringService) buildProductContext(ctx context.Context, orgID uuid.UUID) []domain.ProductSelectionContext {
+// details for inclusion in LLM scoring prompts. It also returns the total project
+// cost in cents so the LLM can compare it to the grant's max award.
+func (s *ScoringService) buildProductContext(ctx context.Context, orgID uuid.UUID) ([]domain.ProductSelectionContext, int64) {
 	if s.products == nil {
-		return nil
+		return nil, 0
 	}
 	selections, err := s.products.ListSelections(ctx, orgID)
 	if err != nil || len(selections) == 0 {
-		return nil
+		return nil, 0
 	}
 
+	var totalCents int64
 	out := make([]domain.ProductSelectionContext, 0, len(selections))
 	for _, sel := range selections {
 		product, err := s.products.GetByID(ctx, sel.ProductID)
 		if err != nil || product == nil {
 			continue
 		}
+		totalCents += sel.SubtotalCents
 		p := domain.ProductSelectionContext{
 			Name:           product.Name,
 			Quantity:       sel.Quantity,
-			UnitPrice:      fmt.Sprintf("%d.%02d", sel.UnitPriceCents/100, sel.UnitPriceCents%100),
-			Subtotal:       fmt.Sprintf("%d.%02d", sel.SubtotalCents/100, sel.SubtotalCents%100),
+			UnitPrice:      formatCents(sel.UnitPriceCents),
+			Subtotal:       formatCents(sel.SubtotalCents),
 			SelectedAddons: sel.SelectedAddons,
 		}
 		if product.Description != nil {
@@ -321,7 +327,7 @@ func (s *ScoringService) buildProductContext(ctx context.Context, orgID uuid.UUI
 		}
 		out = append(out, p)
 	}
-	return out
+	return out, totalCents
 }
 
 // applyLLMToScore blends an LLM alignment dimension into an existing compatibility score.

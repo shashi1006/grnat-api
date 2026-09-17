@@ -42,12 +42,13 @@ func NewClient(apiKey, model string) *Client {
 
 // GrantFitRequest holds the context needed to evaluate an org/grant fit.
 type GrantFitRequest struct {
-	Org        domain.Organization
-	Profile    domain.OrganizationProfile
-	Grant      domain.Grant
-	Score      *domain.CompatibilityScore
-	RAGContext string
-	Products   []domain.ProductSelectionContext
+	Org         domain.Organization
+	Profile     domain.OrganizationProfile
+	Grant       domain.Grant
+	Score       *domain.CompatibilityScore
+	RAGContext  string
+	Products    []domain.ProductSelectionContext
+	ProjectCost string // formatted USD, e.g. "18,800.00"
 }
 
 // GrantFitResult holds the LLM-generated fit score and rationale.
@@ -67,13 +68,13 @@ Respond ONLY with a single JSON object in this exact format:
 {"score": <number 0-100>, "rationale": "<one to two sentences explaining the fit>"}
 
 Scoring guidelines:
-- 90-100: Exceptional fit; the organization strongly matches every major eligibility and strategic requirement.
-- 70-89: Good fit; most criteria align and the org can credibly compete.
-- 50-69: Partial fit; some alignment but notable gaps or weak evidence.
-- 25-49: Poor fit; major mismatches in eligibility, mission, or capacity.
+- 90-100: Exceptional fit; the organization strongly matches every major eligibility and strategic requirement AND the grant can fully cover the selected project cost.
+- 70-89: Good fit; most criteria align, the org can credibly compete, and the grant can fund most or all of the project cost.
+- 50-69: Partial fit; some alignment but the grant may not fully cover the project cost or there are notable gaps.
+- 25-49: Poor fit; major mismatches in eligibility, mission, capacity, or the grant award is far below the project cost.
 - 0-24: Very unlikely; hard disqualifiers or mission/location/capacity mismatch.
 
-Be concise and evidence-based. Do not invent facts not present in the context. If key data is missing, lower the score accordingly and explain what is missing.`
+Consider only the products, amounts, and facts provided in the context. Do not introduce additional products or equipment. If the grant's max award is less than the project cost, lower the score and explain the shortfall.`
 
 	user := buildGrantFitPrompt(req)
 
@@ -211,10 +212,10 @@ func buildGrantFitPrompt(req GrantFitRequest) string {
 	b.WriteString(fmt.Sprintf("Requires Audited Financials: %v\n", req.Grant.RequiresAuditedFin))
 	b.WriteString(fmt.Sprintf("Requires Match: %v\n", req.Grant.RequiresMatch))
 	if req.Grant.MinAwardAmount != nil {
-		b.WriteString(fmt.Sprintf("Min Award: $%d\n", *req.Grant.MinAwardAmount/100))
+		b.WriteString(fmt.Sprintf("Min Award: $%s\n", formatCents(*req.Grant.MinAwardAmount)))
 	}
 	if req.Grant.MaxAwardAmount != nil {
-		b.WriteString(fmt.Sprintf("Max Award: $%d\n", *req.Grant.MaxAwardAmount/100))
+		b.WriteString(fmt.Sprintf("Max Award: $%s\n", formatCents(*req.Grant.MaxAwardAmount)))
 	}
 
 	if req.Score != nil && !req.Score.Disqualified {
@@ -227,10 +228,16 @@ func buildGrantFitPrompt(req GrantFitRequest) string {
 		}
 	}
 
+	if req.ProjectCost != "" {
+		b.WriteString("\n## PROJECT COST\n")
+		b.WriteString(fmt.Sprintf("Total cost of selected products: $%s\n", req.ProjectCost))
+		b.WriteString("A grant that cannot cover this project cost is a weaker fit.\n")
+	}
+
 	if len(req.Products) > 0 {
 		b.WriteString("\n## SELECTED SOLUTIONS & PRODUCTS\n")
-		b.WriteString("The organization plans to deploy the following preparedness solutions. " +
-			"Consider how well these products align with the grant's goals and priorities.\n\n")
+		b.WriteString("The organization plans to deploy ONLY the following preparedness solutions. " +
+			"Do not consider or mention any products, equipment, stations, or systems not listed below.\n\n")
 		for i, p := range req.Products {
 			b.WriteString(fmt.Sprintf("%d. %s (Qty: %d, Unit Cost: $%s, Subtotal: $%s)\n", i+1, p.Name, p.Quantity, p.UnitPrice, p.Subtotal))
 			if p.Description != "" {
@@ -252,8 +259,30 @@ func buildGrantFitPrompt(req GrantFitRequest) string {
 		b.WriteString("\n")
 	}
 
-	b.WriteString("\n## TASK\nEvaluate the overall fit between this organization and this grant.")
+	b.WriteString("\n## TASK\n")
+	b.WriteString("Evaluate the overall fit between this organization and this grant. " +
+		"Score the grant highest when it is eligible, the selected products align with the grant's goals, " +
+		"and the grant's maximum award is sufficient to cover the project cost. " +
+		"Only reference the products listed under SELECTED SOLUTIONS & PRODUCTS.")
 	return b.String()
+}
+
+// formatCents converts a cents amount to a USD string with commas (e.g., 1880000 -> "18,800.00").
+func formatCents(cents int64) string {
+	if cents < 0 {
+		return "-" + formatCents(-cents)
+	}
+	whole := cents / 100
+	frac := cents % 100
+	return fmt.Sprintf("%s.%02d", formatThousands(whole), frac)
+}
+
+// formatThousands adds comma separators to a whole number.
+func formatThousands(n int64) string {
+	if n < 1000 {
+		return fmt.Sprintf("%d", n)
+	}
+	return formatThousands(n/1000) + fmt.Sprintf(",%03d", n%1000)
 }
 
 func stripCodeFence(s string) string {
