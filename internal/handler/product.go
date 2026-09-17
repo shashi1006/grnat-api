@@ -103,10 +103,12 @@ func (h *ProductHandler) SaveProductSelection(c *gin.Context) {
 				ConfigurationID: req.ConfigurationID,
 				SelectedAddons:  req.SelectedAddons,
 				Quantity:        quantity,
-				UnitPriceCents:  req.UnitPriceCents,
-				SubtotalCents:   req.SubtotalCents,
+				UnitPriceCents:  req.UnitPriceCents * 100,
+				SubtotalCents:   req.SubtotalCents * 100,
 			})
 			if err == nil {
+				selection.UnitPriceCents /= 100
+				selection.SubtotalCents /= 100
 				saved = append(saved, selection)
 			}
 		}
@@ -141,13 +143,15 @@ func (h *ProductHandler) SaveProductSelection(c *gin.Context) {
 		ConfigurationID: req.ConfigurationID,
 		SelectedAddons:  req.SelectedAddons,
 		Quantity:        quantity,
-		UnitPriceCents:  req.UnitPriceCents,
-		SubtotalCents:   req.SubtotalCents,
+		UnitPriceCents:  req.UnitPriceCents * 100,
+		SubtotalCents:   req.SubtotalCents * 100,
 	})
 	if err != nil {
 		response.InternalError(c, err)
 		return
 	}
+	selection.UnitPriceCents /= 100
+	selection.SubtotalCents /= 100
 	response.OK(c, selection)
 }
 
@@ -169,6 +173,10 @@ func (h *ProductHandler) ListProductSelections(c *gin.Context) {
 	if err != nil {
 		response.InternalError(c, err)
 		return
+	}
+	for _, s := range selections {
+		s.UnitPriceCents /= 100
+		s.SubtotalCents /= 100
 	}
 	response.OK(c, selections)
 }
