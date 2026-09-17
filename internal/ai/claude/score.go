@@ -196,22 +196,10 @@ func buildGrantFitPrompt(req GrantFitRequest) string {
 	return b.String()
 }
 
-// formatCents converts a cents amount to a USD string with commas (e.g., 1880000 -> "18,800.00").
+// formatCents converts a cents amount to a plain whole-dollar string
+// with no commas or decimals. This keeps LLM prompts unambiguous.
 func formatCents(cents int64) string {
-	if cents < 0 {
-		return "-" + formatCents(-cents)
-	}
-	whole := cents / 100
-	frac := cents % 100
-	return fmt.Sprintf("%s.%02d", formatThousands(whole), frac)
-}
-
-// formatThousands adds comma separators to a whole number.
-func formatThousands(n int64) string {
-	if n < 1000 {
-		return fmt.Sprintf("%d", n)
-	}
-	return formatThousands(n/1000) + fmt.Sprintf(",%03d", n%1000)
+	return fmt.Sprintf("%d", cents/100)
 }
 
 func stripCodeFence(s string) string {
