@@ -193,6 +193,9 @@ func (s *NarrativeService) buildProductContext(ctx context.Context, orgID uuid.U
 
 	out := make([]domain.ProductSelectionContext, 0, len(selections))
 	for _, sel := range selections {
+		if sel.Quantity == 0 || sel.SubtotalCents == 0 {
+			continue
+		}
 		product, err := s.products.GetByID(ctx, sel.ProductID)
 		if err != nil || product == nil {
 			continue
