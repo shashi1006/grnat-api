@@ -311,9 +311,10 @@ type ScoredGrant struct {
 	// Submission-pathway fields — populated by ListTopGrantsForOrg so the
 	// client can distinguish directly-submittable grants from pass-through
 	// programs that require a subaward through an administering agency.
-	EligibleApplicants []string `json:"-"`
-	SubmissionPathway  string   `json:"-"`
-	PassThroughNote    *string  `json:"-"`
+	EligibleApplicants     []string               `json:"-"`
+	SubmissionPathway      string                 `json:"-"`
+	PassThroughNote        *string                `json:"-"`
+	SubmissionRequirements map[string]interface{} `json:"-"`
 }
 
 type ScoredOrg struct {
@@ -562,6 +563,9 @@ func (sg ScoredGrant) MarshalJSON() ([]byte, error) {
 	m["submission_pathway"] = sg.SubmissionPathway
 	if sg.PassThroughNote != nil {
 		m["pass_through_note"] = *sg.PassThroughNote
+	}
+	if len(sg.SubmissionRequirements) > 0 {
+		m["submission_requirements"] = sg.SubmissionRequirements
 	}
 
 	return json.Marshal(m)

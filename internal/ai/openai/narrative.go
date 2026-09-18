@@ -169,6 +169,49 @@ func buildNarrativeUserPrompt(req NarrativeRequest) string {
 		b.WriteString(fmt.Sprintf("Max Award: $%d\n", *req.Grant.MaxAwardAmount/100))
 	}
 
+	if reqs := req.Grant.SubmissionRequirements; len(reqs) > 0 {
+		var lines []string
+		addList := func(key, label string) {
+			raw, ok := reqs[key].([]interface{})
+			if !ok {
+				return
+			}
+			var items []string
+			for _, v := range raw {
+				if s, ok := v.(string); ok && s != "" {
+					items = append(items, s)
+				}
+			}
+			if len(items) > 0 {
+				lines = append(lines, fmt.Sprintf("%s: %s", label, strings.Join(items, "; ")))
+			}
+		}
+		addList("required_forms", "Required forms")
+		addList("narrative_sections", "Required narrative sections")
+		addList("set_asides", "Mandatory set-asides")
+		addList("certifications", "Required certifications")
+		if s, ok := reqs["award_constraints"].(string); ok && s != "" {
+			lines = append(lines, "Award constraints: "+s)
+		}
+		if len(lines) > 0 {
+			b.WriteString("\n## PROGRAM-SPECIFIC REQUIREMENTS\n")
+			for _, l := range lines {
+				b.WriteString(l + "\n")
+			}
+		}
+	}
+
+	if req.Score != nil && req.Score.SubawardOnly {
+		b.WriteString("\n## SUBMISSION PATHWAY\n")
+		note := "This program only accepts applications from an administering agency."
+		if req.Grant.PassThroughNote != nil && *req.Grant.PassThroughNote != "" {
+			note = *req.Grant.PassThroughNote
+		}
+		b.WriteString(note + "\n")
+		b.WriteString("The organization cannot submit the federal application itself. " +
+			"Write this as a SUBRECIPIENT funding request the organization can bring to the administering agency.\n")
+	}
+
 	if req.RAGContext != "" {
 		b.WriteString("\n## RELEVANT GRANT REQUIREMENTS (from NOFO)\n")
 		b.WriteString(req.RAGContext)

@@ -74,7 +74,8 @@ func (r *scoringRepo) ListTopGrantsForOrg(ctx context.Context, orgID uuid.UUID, 
 		       g.slug, g.title, g.funder_name, g.funder_type, g.agency, g.description, g.category,
 		       g.focus_areas, g.eligible_org_types, g.min_award_amount, g.max_award_amount, g.application_url,
 		       g.status, g.deadline::text, g.difficulty_level, g.competition_level, g.tags,
-		       g.eligible_applicants, g.submission_pathway, g.pass_through_note
+		       g.eligible_applicants, g.submission_pathway, g.pass_through_note,
+		       g.submission_requirements
 		FROM compatibility_scores cs
 		JOIN grants g ON g.id = cs.grant_id
 		WHERE cs.org_id=$1 AND g.status='active'
@@ -94,6 +95,7 @@ func (r *scoringRepo) ListTopGrantsForOrg(ctx context.Context, orgID uuid.UUID, 
 			&sg.FocusAreas, &sg.EligibleOrgTypes, &sg.MinAwardAmount, &sg.MaxAwardAmount, &sg.ApplicationURL,
 			&sg.GrantStatus, &sg.Deadline, &sg.DifficultyLevel, &sg.CompetitionLevel, &sg.Tags,
 			&sg.EligibleApplicants, &sg.SubmissionPathway, &sg.PassThroughNote,
+			&sg.SubmissionRequirements,
 		)
 		if err != nil {
 			return nil, err
