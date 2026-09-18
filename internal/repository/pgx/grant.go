@@ -2,6 +2,7 @@ package pgxrepo
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -184,6 +185,30 @@ func (r *grantRepo) Update(ctx context.Context, p repository.UpdateGrantParams) 
 	))
 }
 
+func (r *grantRepo) UpdateRequirements(ctx context.Context, id uuid.UUID, p repository.UpdateRequirementsParams) (*domain.Grant, error) {
+	reqJSON, err := json.Marshal(p.SubmissionRequirements)
+	if err != nil {
+		return nil, fmt.Errorf("marshal submission requirements: %w", err)
+	}
+	const q = `
+		UPDATE grants
+		SET eligible_applicants       = $2,
+		    submission_pathway        = $3,
+		    pass_through_note         = $4,
+		    submission_requirements   = $5,
+		    requirements_extracted_at = $6,
+		    updated_at                = NOW()
+		WHERE id=$1 RETURNING *`
+	return scanGrant(r.db.QueryRow(ctx, q,
+		id,
+		defaultEmpty(p.EligibleApplicants),
+		string(p.SubmissionPathway),
+		p.PassThroughNote,
+		reqJSON,
+		p.RequirementsExtractedAt,
+	))
+}
+
 func (r *grantRepo) UpdateEmbedding(ctx context.Context, id uuid.UUID, embedding []float32) error {
 	v := pgvector.NewVector(embedding)
 	_, err := r.db.Exec(ctx, `UPDATE grants SET embedding=$2, updated_at=NOW() WHERE id=$1`, id, v)
@@ -351,6 +376,8 @@ func scanGrantWithExtra(row scannable, distance *float64) (*domain.Grant, error)
 		&g.IsRecurring, &g.RecurrenceNotes, &diff, &comp,
 		&g.Tags, &emb, &g.Metadata, &g.CreatedBy,
 		&g.CreatedAt, &g.UpdatedAt,
+		&g.EligibleApplicants, &g.SubmissionPathway, &g.PassThroughNote,
+		&g.SubmissionRequirements, &g.RequirementsExtractedAt,
 	}
 	if distance != nil {
 		dest = append(dest, distance)

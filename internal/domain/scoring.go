@@ -52,6 +52,7 @@ type CompatibilityScore struct {
 	Tier              CompatibilityTier `json:"tier"`
 	DimensionScores   []DimensionScore  `json:"dimension_scores"`
 	Disqualified      bool              `json:"disqualified"`
+	SubawardOnly      bool              `json:"subaward_only"`
 	DisqualifyReasons []string          `json:"disqualify_reasons"`
 	Strengths         []string          `json:"strengths"`
 	Gaps              []string          `json:"gaps"`
@@ -77,6 +78,7 @@ type ScoringResult struct {
 	Tier              CompatibilityTier
 	DimensionScores   []DimensionScore
 	Disqualified      bool
+	SubawardOnly      bool
 	DisqualifyReasons []string
 	Strengths         []string
 	Gaps              []string

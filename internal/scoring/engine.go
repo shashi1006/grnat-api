@@ -84,7 +84,43 @@ func (e *Engine) Compute(input domain.ScoringInput) domain.ScoringResult {
 	result.Gaps = nonNil(e.deriveGaps(dims))
 	result.Recommendations = nonNil(e.deriveRecommendations(input, dims))
 
+	// Pass-through programs the org cannot submit itself: the org may still
+	// receive a subaward, so don't disqualify — but cap the score so it never
+	// outranks a genuinely submittable match, and flag the pathway.
+	if e.isSubawardOnly(input) {
+		result.SubawardOnly = true
+		if result.TotalScore > subawardOnlyCap {
+			result.TotalScore = subawardOnlyCap
+			result.Tier = domain.ScoreTierFromScore(result.TotalScore)
+		}
+		note := "This program only accepts applications from an administering agency (e.g., the state SAA)."
+		if g := input.Grant.PassThroughNote; g != nil && *g != "" {
+			note = *g
+		}
+		result.Gaps = append([]string{note}, result.Gaps...)
+		result.Recommendations = append([]string{
+			"Subaward pathway only — pursue funding through the administering agency's subrecipient process rather than a direct application.",
+		}, result.Recommendations...)
+	}
+
 	return result
+}
+
+// subawardOnlyCap keeps pass-through-only matches below direct matches.
+const subawardOnlyCap = 55.0
+
+// isSubawardOnly reports whether the grant is administered by another entity
+// and this org type is not an eligible applicant, so the org could only
+// participate as a subrecipient.
+func (e *Engine) isSubawardOnly(input domain.ScoringInput) bool {
+	g := input.Grant
+	if g.SubmissionPathway != domain.PathwayPassThrough && g.SubmissionPathway != domain.PathwayMixed {
+		return false
+	}
+	if len(g.EligibleApplicants) == 0 {
+		return false
+	}
+	return !contains(g.EligibleApplicants, string(input.Org.OrgType))
 }
 
 // --- Disqualifier checks ---

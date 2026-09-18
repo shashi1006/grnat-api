@@ -48,53 +48,71 @@ const (
 	CompetitionVeryHigh CompetitionLevel = "very_high"
 )
 
+// SubmissionPathway describes how an application reaches the funder.
+//   - direct: the applicant organization submits to the funder itself
+//   - pass_through: only an administering agency (e.g. a state SAA) may
+//     submit; other organizations can only receive subawards
+//   - mixed: both direct and pass-through tracks exist (e.g. JAG)
+type SubmissionPathway string
+
+const (
+	PathwayDirect      SubmissionPathway = "direct"
+	PathwayPassThrough SubmissionPathway = "pass_through"
+	PathwayMixed       SubmissionPathway = "mixed"
+)
+
 // Grant represents a funding opportunity in the catalog.
 type Grant struct {
-	ID                    uuid.UUID              `json:"id"`
-	Slug                  string                 `json:"slug"`
-	Title                 string                 `json:"title"`
-	FunderName            string                 `json:"funder_name"`
-	FunderType            FunderType             `json:"funder_type"`
-	ProgramNumber         *string                `json:"program_number,omitempty"`
-	OpportunityNumber     *string                `json:"opportunity_number,omitempty"`
-	Agency                *string                `json:"agency,omitempty"`
-	SubAgency             *string                `json:"sub_agency,omitempty"`
-	Description           *string                `json:"description,omitempty"`
-	Synopsis              *string                `json:"synopsis,omitempty"`
-	Category              *string                `json:"category,omitempty"`
-	Subcategory           *string                `json:"subcategory,omitempty"`
-	FocusAreas            []string               `json:"focus_areas"`
-	EligibleOrgTypes      []string               `json:"eligible_org_types"`
-	EligiblePopulations   []string               `json:"eligible_populations"`
-	EligibleStates        []string               `json:"eligible_states"`
-	Requires501c3         bool                   `json:"requires_501c3"`
-	RequiresAuditedFin    bool                   `json:"requires_audited_fin"`
-	RequiresIndirectRate  bool                   `json:"requires_indirect_rate"`
-	RequiresMatch         bool                   `json:"requires_match"`
-	MatchPercentage       *float64               `json:"match_percentage,omitempty"`
-	MinAwardAmount        *int64                 `json:"min_award_amount,omitempty"`
-	MaxAwardAmount        *int64                 `json:"max_award_amount,omitempty"`
-	AvgAwardAmount        *int64                 `json:"avg_award_amount,omitempty"`
-	TotalFundingAvailable *int64                 `json:"total_funding_available,omitempty"`
-	NumAwardsExpected     *int32                 `json:"num_awards_expected,omitempty"`
-	ApplicationURL        *string                `json:"application_url,omitempty"`
-	FAQURL                *string                `json:"faq_url,omitempty"`
-	WebinarURL            *string                `json:"webinar_url,omitempty"`
-	FullNOFOText          *string                `json:"-"`
-	EligibleCounties      []string               `json:"eligible_counties"`
-	Status                GrantStatus            `json:"status"`
-	Deadline              *time.Time             `json:"deadline,omitempty"`
-	OpenDate              *time.Time             `json:"open_date,omitempty"`
-	PeriodOfPerformance   *string                `json:"period_of_performance,omitempty"`
-	IsRecurring           bool                   `json:"is_recurring"`
-	RecurrenceNotes       *string                `json:"recurrence_notes,omitempty"`
-	DifficultyLevel       DifficultyLevel        `json:"difficulty_level"`
-	CompetitionLevel      CompetitionLevel       `json:"competition_level"`
-	Tags                  []string               `json:"tags"`
-	Metadata              map[string]interface{} `json:"metadata,omitempty"`
-	CreatedBy             *uuid.UUID             `json:"created_by,omitempty"`
-	CreatedAt             time.Time              `json:"created_at"`
-	UpdatedAt             time.Time              `json:"updated_at"`
+	ID                      uuid.UUID              `json:"id"`
+	Slug                    string                 `json:"slug"`
+	Title                   string                 `json:"title"`
+	FunderName              string                 `json:"funder_name"`
+	FunderType              FunderType             `json:"funder_type"`
+	ProgramNumber           *string                `json:"program_number,omitempty"`
+	OpportunityNumber       *string                `json:"opportunity_number,omitempty"`
+	Agency                  *string                `json:"agency,omitempty"`
+	SubAgency               *string                `json:"sub_agency,omitempty"`
+	Description             *string                `json:"description,omitempty"`
+	Synopsis                *string                `json:"synopsis,omitempty"`
+	Category                *string                `json:"category,omitempty"`
+	Subcategory             *string                `json:"subcategory,omitempty"`
+	FocusAreas              []string               `json:"focus_areas"`
+	EligibleOrgTypes        []string               `json:"eligible_org_types"`
+	EligiblePopulations     []string               `json:"eligible_populations"`
+	EligibleStates          []string               `json:"eligible_states"`
+	EligibleApplicants      []string               `json:"eligible_applicants"`
+	SubmissionPathway       SubmissionPathway      `json:"submission_pathway"`
+	PassThroughNote         *string                `json:"pass_through_note,omitempty"`
+	SubmissionRequirements  map[string]interface{} `json:"submission_requirements"`
+	RequirementsExtractedAt *time.Time             `json:"requirements_extracted_at,omitempty"`
+	Requires501c3           bool                   `json:"requires_501c3"`
+	RequiresAuditedFin      bool                   `json:"requires_audited_fin"`
+	RequiresIndirectRate    bool                   `json:"requires_indirect_rate"`
+	RequiresMatch           bool                   `json:"requires_match"`
+	MatchPercentage         *float64               `json:"match_percentage,omitempty"`
+	MinAwardAmount          *int64                 `json:"min_award_amount,omitempty"`
+	MaxAwardAmount          *int64                 `json:"max_award_amount,omitempty"`
+	AvgAwardAmount          *int64                 `json:"avg_award_amount,omitempty"`
+	TotalFundingAvailable   *int64                 `json:"total_funding_available,omitempty"`
+	NumAwardsExpected       *int32                 `json:"num_awards_expected,omitempty"`
+	ApplicationURL          *string                `json:"application_url,omitempty"`
+	FAQURL                  *string                `json:"faq_url,omitempty"`
+	WebinarURL              *string                `json:"webinar_url,omitempty"`
+	FullNOFOText            *string                `json:"-"`
+	EligibleCounties        []string               `json:"eligible_counties"`
+	Status                  GrantStatus            `json:"status"`
+	Deadline                *time.Time             `json:"deadline,omitempty"`
+	OpenDate                *time.Time             `json:"open_date,omitempty"`
+	PeriodOfPerformance     *string                `json:"period_of_performance,omitempty"`
+	IsRecurring             bool                   `json:"is_recurring"`
+	RecurrenceNotes         *string                `json:"recurrence_notes,omitempty"`
+	DifficultyLevel         DifficultyLevel        `json:"difficulty_level"`
+	CompetitionLevel        CompetitionLevel       `json:"competition_level"`
+	Tags                    []string               `json:"tags"`
+	Metadata                map[string]interface{} `json:"metadata,omitempty"`
+	CreatedBy               *uuid.UUID             `json:"created_by,omitempty"`
+	CreatedAt               time.Time              `json:"created_at"`
+	UpdatedAt               time.Time              `json:"updated_at"`
 }
 
 // NOFOChunk is a text chunk from a NOFO document, stored for RAG.

@@ -361,3 +361,57 @@ func baseOrg() domain.Organization {
 }
 
 func int64Ptr(n int64) *int64 { return &n }
+
+// A pass-through grant (e.g. HSGP) that only an administering agency may
+// submit should not disqualify a beneficiary org — but it must be flagged
+// subaward-only and capped so it never outranks a directly-submittable match.
+func TestEngine_Compute_SubawardOnlyPassThrough(t *testing.T) {
+	e := scoring.NewEngine()
+	note := "Only the State Administrative Agency (SAA) may submit."
+	result := e.Compute(domain.ScoringInput{
+		Org:     baseOrg(), // nonprofit
+		Profile: domain.OrganizationProfile{Has501c3: true},
+		Grant: domain.Grant{
+			ID:                 uuid.New(),
+			Title:              "Fiscal Year 2026 HSGP",
+			EligibleOrgTypes:   []string{"nonprofit"},
+			EligibleApplicants: []string{"state-administrative-agency"},
+			SubmissionPathway:  domain.PathwayPassThrough,
+			PassThroughNote:    &note,
+		},
+	})
+	if result.Disqualified {
+		t.Fatalf("subaward-pathway grant should not disqualify a beneficiary org: %v", result.DisqualifyReasons)
+	}
+	if !result.SubawardOnly {
+		t.Error("expected SubawardOnly=true for pass_through grant with ineligible applicant type")
+	}
+	if result.TotalScore > 55 {
+		t.Errorf("expected subaward-only score capped at 55, got %.1f", result.TotalScore)
+	}
+	found := false
+	for _, g := range result.Gaps {
+		if g == note {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("expected pass-through note in gaps")
+	}
+}
+
+func TestEngine_Compute_DirectPathwayUnaffected(t *testing.T) {
+	e := scoring.NewEngine()
+	result := e.Compute(domain.ScoringInput{
+		Org:     baseOrg(),
+		Profile: domain.OrganizationProfile{Has501c3: true},
+		Grant: domain.Grant{
+			ID:               uuid.New(),
+			Title:            "Direct Grant",
+			EligibleOrgTypes: []string{"nonprofit"},
+		},
+	})
+	if result.SubawardOnly {
+		t.Error("direct grant must not be flagged subaward-only")
+	}
+}

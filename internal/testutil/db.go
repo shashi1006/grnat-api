@@ -3,7 +3,6 @@ package testutil
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -93,5 +92,4 @@ func IntegrationSkip(t *testing.T) {
 		t.Skip("skipping integration test in short mode")
 	}
 	// Allow opt-in via env or build tag
-	fmt.Sprintf("") // noop — actual skip handled by -short flag
 }

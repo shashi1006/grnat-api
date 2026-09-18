@@ -29,14 +29,15 @@ func (r *scoringRepo) Upsert(ctx context.Context, p repository.UpsertScoreParams
 	const q = `
 		INSERT INTO compatibility_scores (
 			org_id, grant_id, total_score, tier, dimension_scores,
-			disqualified, disqualify_reasons, strengths, gaps, recommendations,
+			disqualified, subaward_only, disqualify_reasons, strengths, gaps, recommendations,
 			semantic_score, engine_version
-		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
 		ON CONFLICT (org_id, grant_id) DO UPDATE SET
 			total_score        = EXCLUDED.total_score,
 			tier               = EXCLUDED.tier,
 			dimension_scores   = EXCLUDED.dimension_scores,
 			disqualified       = EXCLUDED.disqualified,
+			subaward_only      = EXCLUDED.subaward_only,
 			disqualify_reasons = EXCLUDED.disqualify_reasons,
 			strengths          = EXCLUDED.strengths,
 			gaps               = EXCLUDED.gaps,
@@ -46,12 +47,12 @@ func (r *scoringRepo) Upsert(ctx context.Context, p repository.UpsertScoreParams
 			computed_at        = NOW(),
 			updated_at         = NOW()
 		RETURNING id, org_id, grant_id, total_score, tier, dimension_scores,
-		          disqualified, disqualify_reasons, strengths, gaps, recommendations,
+		          disqualified, subaward_only, disqualify_reasons, strengths, gaps, recommendations,
 		          semantic_score, engine_version, computed_at, created_at, updated_at`
 
 	row := r.db.QueryRow(ctx, q,
 		p.OrgID, p.GrantID, p.TotalScore, string(p.Tier), dimJSON,
-		p.Disqualified, p.DisqualifyReasons, p.Strengths, p.Gaps, p.Recommendations,
+		p.Disqualified, p.SubawardOnly, p.DisqualifyReasons, p.Strengths, p.Gaps, p.Recommendations,
 		p.SemanticScore, p.EngineVersion,
 	)
 	return scanScore(row)
@@ -59,7 +60,7 @@ func (r *scoringRepo) Upsert(ctx context.Context, p repository.UpsertScoreParams
 
 func (r *scoringRepo) Get(ctx context.Context, orgID, grantID uuid.UUID) (*domain.CompatibilityScore, error) {
 	const q = `SELECT id, org_id, grant_id, total_score, tier, dimension_scores,
-	                  disqualified, disqualify_reasons, strengths, gaps, recommendations,
+	                  disqualified, subaward_only, disqualify_reasons, strengths, gaps, recommendations,
 	                  semantic_score, engine_version, computed_at, created_at, updated_at
 	           FROM compatibility_scores WHERE org_id=$1 AND grant_id=$2`
 	return scanScore(r.db.QueryRow(ctx, q, orgID, grantID))
@@ -68,15 +69,16 @@ func (r *scoringRepo) Get(ctx context.Context, orgID, grantID uuid.UUID) (*domai
 func (r *scoringRepo) ListTopGrantsForOrg(ctx context.Context, orgID uuid.UUID, limit, offset int32) ([]*repository.ScoredGrant, error) {
 	const q = `
 		SELECT cs.id, cs.org_id, cs.grant_id, cs.total_score, cs.tier, cs.dimension_scores,
-		       cs.disqualified, cs.disqualify_reasons, cs.strengths, cs.gaps, cs.recommendations,
+		       cs.disqualified, cs.subaward_only, cs.disqualify_reasons, cs.strengths, cs.gaps, cs.recommendations,
 		       cs.semantic_score, cs.engine_version, cs.computed_at, cs.created_at, cs.updated_at,
 		       g.slug, g.title, g.funder_name, g.funder_type, g.agency, g.description, g.category,
 		       g.focus_areas, g.eligible_org_types, g.min_award_amount, g.max_award_amount, g.application_url,
-		       g.status, g.deadline::text, g.difficulty_level, g.competition_level, g.tags
+		       g.status, g.deadline::text, g.difficulty_level, g.competition_level, g.tags,
+		       g.eligible_applicants, g.submission_pathway, g.pass_through_note
 		FROM compatibility_scores cs
 		JOIN grants g ON g.id = cs.grant_id
 		WHERE cs.org_id=$1 AND g.status='active'
-		ORDER BY cs.disqualified ASC, cs.total_score DESC LIMIT $2 OFFSET $3`
+		ORDER BY cs.disqualified ASC, cs.subaward_only ASC, cs.total_score DESC LIMIT $2 OFFSET $3`
 
 	rows, err := r.db.Query(ctx, q, orgID, limit, offset)
 	if err != nil {
@@ -91,6 +93,7 @@ func (r *scoringRepo) ListTopGrantsForOrg(ctx context.Context, orgID uuid.UUID, 
 			&sg.Slug, &sg.Title, &sg.FunderName, &sg.FunderType, &sg.Agency, &sg.Description, &sg.Category,
 			&sg.FocusAreas, &sg.EligibleOrgTypes, &sg.MinAwardAmount, &sg.MaxAwardAmount, &sg.ApplicationURL,
 			&sg.GrantStatus, &sg.Deadline, &sg.DifficultyLevel, &sg.CompetitionLevel, &sg.Tags,
+			&sg.EligibleApplicants, &sg.SubmissionPathway, &sg.PassThroughNote,
 		)
 		if err != nil {
 			return nil, err
@@ -104,7 +107,7 @@ func (r *scoringRepo) ListTopGrantsForOrg(ctx context.Context, orgID uuid.UUID, 
 func (r *scoringRepo) ListOrgsForGrant(ctx context.Context, grantID uuid.UUID, limit, offset int32) ([]*repository.ScoredOrg, error) {
 	const q = `
 		SELECT cs.id, cs.org_id, cs.grant_id, cs.total_score, cs.tier, cs.dimension_scores,
-		       cs.disqualified, cs.disqualify_reasons, cs.strengths, cs.gaps, cs.recommendations,
+		       cs.disqualified, cs.subaward_only, cs.disqualify_reasons, cs.strengths, cs.gaps, cs.recommendations,
 		       cs.semantic_score, cs.engine_version, cs.computed_at, cs.created_at, cs.updated_at,
 		       o.name, o.state, o.org_type
 		FROM compatibility_scores cs
@@ -154,7 +157,7 @@ func scanScoreWithExtra(row scannable, extra ...any) (*domain.CompatibilityScore
 
 	dest := []any{
 		&s.ID, &s.OrgID, &s.GrantID, &s.TotalScore, &tierStr, &dimJSON,
-		&s.Disqualified, &s.DisqualifyReasons, &s.Strengths, &s.Gaps, &s.Recommendations,
+		&s.Disqualified, &s.SubawardOnly, &s.DisqualifyReasons, &s.Strengths, &s.Gaps, &s.Recommendations,
 		&s.SemanticScore, &s.EngineVersion, &s.ComputedAt, &s.CreatedAt, &s.UpdatedAt,
 	}
 	dest = append(dest, extra...)

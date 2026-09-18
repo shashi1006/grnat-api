@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/readygeneration/readygeneration-backend/internal/domain"
@@ -148,6 +149,7 @@ type GrantRepo interface {
 	ListByCategory(ctx context.Context, category string, limit, offset int32) ([]*domain.Grant, error)
 	Search(ctx context.Context, query string, limit, offset int32) ([]*domain.Grant, error)
 	Update(ctx context.Context, params UpdateGrantParams) (*domain.Grant, error)
+	UpdateRequirements(ctx context.Context, id uuid.UUID, params UpdateRequirementsParams) (*domain.Grant, error)
 	UpdateEmbedding(ctx context.Context, id uuid.UUID, embedding []float32) error
 	UpdateNOFO(ctx context.Context, id uuid.UUID, text string) error
 	Archive(ctx context.Context, id uuid.UUID) error
@@ -218,6 +220,17 @@ type UpdateGrantParams struct {
 	Metadata              map[string]interface{}
 }
 
+// UpdateRequirementsParams carries the extracted submission requirements for
+// a grant — applicant eligibility, submission pathway, and the structured
+// requirement set (forms, narrative sections, set-asides, certifications).
+type UpdateRequirementsParams struct {
+	EligibleApplicants      []string
+	SubmissionPathway       domain.SubmissionPathway
+	PassThroughNote         *string
+	SubmissionRequirements  map[string]interface{}
+	RequirementsExtractedAt *time.Time
+}
+
 type GrantWithDistance struct {
 	domain.Grant
 	Distance float64
@@ -264,6 +277,7 @@ type UpsertScoreParams struct {
 	Tier              domain.CompatibilityTier
 	DimensionScores   []domain.DimensionScore
 	Disqualified      bool
+	SubawardOnly      bool
 	DisqualifyReasons []string
 	Strengths         []string
 	Gaps              []string
@@ -293,6 +307,13 @@ type ScoredGrant struct {
 	DifficultyLevel  string   `json:"-"`
 	CompetitionLevel string   `json:"-"`
 	Tags             []string `json:"-"`
+
+	// Submission-pathway fields — populated by ListTopGrantsForOrg so the
+	// client can distinguish directly-submittable grants from pass-through
+	// programs that require a subaward through an administering agency.
+	EligibleApplicants []string `json:"-"`
+	SubmissionPathway  string   `json:"-"`
+	PassThroughNote    *string  `json:"-"`
 }
 
 type ScoredOrg struct {
@@ -537,6 +558,11 @@ func (sg ScoredGrant) MarshalJSON() ([]byte, error) {
 	m["difficulty_level"] = sg.DifficultyLevel
 	m["competition_level"] = sg.CompetitionLevel
 	m["tags"] = nonil(sg.Tags)
+	m["eligible_applicants"] = nonil(sg.EligibleApplicants)
+	m["submission_pathway"] = sg.SubmissionPathway
+	if sg.PassThroughNote != nil {
+		m["pass_through_note"] = *sg.PassThroughNote
+	}
 
 	return json.Marshal(m)
 }

@@ -195,6 +195,28 @@ func (h *GrantHandler) IngestNOFO(c *gin.Context) {
 	response.OK(c, gin.H{"message": "NOFO ingested and chunked successfully"})
 }
 
+// ExtractRequirements godoc
+// @Summary      Extract structured submission requirements from a grant's NOFO (admin)
+// @Tags         grants
+// @Security     BearerAuth
+// @Produce      json
+// @Param        id    path   string         true  "Grant UUID"
+// @Success      200  {object}  response.Envelope
+// @Router       /admin/grants/{id}/extract-requirements [post]
+func (h *GrantHandler) ExtractRequirements(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "invalid grant id")
+		return
+	}
+	grant, err := h.grantSvc.ExtractRequirements(c.Request.Context(), id)
+	if err != nil {
+		response.InternalError(c, err)
+		return
+	}
+	response.OK(c, gin.H{"grant": grant})
+}
+
 // ArchiveGrant godoc
 // @Summary      Archive a grant (admin)
 // @Tags         grants

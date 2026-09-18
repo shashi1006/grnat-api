@@ -3,8 +3,10 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/readygeneration/readygeneration-backend/internal/ai/claude"
 	"github.com/readygeneration/readygeneration-backend/internal/ai/embedding"
 	"github.com/readygeneration/readygeneration-backend/internal/ai/rag"
 	"github.com/readygeneration/readygeneration-backend/internal/domain"
@@ -13,14 +15,15 @@ import (
 
 // GrantService handles grant catalog management, NOFO ingestion, and semantic search.
 type GrantService struct {
-	grants    repository.GrantRepo
-	embedSvc  *embedding.Service
-	ragEngine *rag.Engine
+	grants       repository.GrantRepo
+	embedSvc     *embedding.Service
+	ragEngine    *rag.Engine
+	claudeClient *claude.Client
 }
 
 // NewGrantService creates a GrantService.
-func NewGrantService(grants repository.GrantRepo, embedSvc *embedding.Service, ragEngine *rag.Engine) *GrantService {
-	return &GrantService{grants: grants, embedSvc: embedSvc, ragEngine: ragEngine}
+func NewGrantService(grants repository.GrantRepo, embedSvc *embedding.Service, ragEngine *rag.Engine, claudeClient *claude.Client) *GrantService {
+	return &GrantService{grants: grants, embedSvc: embedSvc, ragEngine: ragEngine, claudeClient: claudeClient}
 }
 
 // ListGrants returns a paginated list of active grants.
@@ -99,4 +102,54 @@ func (s *GrantService) ListByCategory(ctx context.Context, category string, limi
 // ArchiveGrant marks a grant as archived.
 func (s *GrantService) ArchiveGrant(ctx context.Context, id uuid.UUID) error {
 	return s.grants.Archive(ctx, id)
+}
+
+// ExtractRequirements runs the NOFO text through Claude to pull structured
+// submission requirements — who may apply, the submission pathway, required
+// forms, narrative sections, set-asides, and certifications — and persists
+// them on the grant.
+func (s *GrantService) ExtractRequirements(ctx context.Context, grantID uuid.UUID) (*domain.Grant, error) {
+	if s.claudeClient == nil {
+		return nil, fmt.Errorf("no LLM client configured for requirement extraction")
+	}
+
+	grant, err := s.grants.GetByID(ctx, grantID)
+	if err != nil {
+		return nil, fmt.Errorf("grant not found: %w", err)
+	}
+
+	text := ""
+	if grant.FullNOFOText != nil {
+		text = *grant.FullNOFOText
+	}
+	if text == "" {
+		chunks, err := s.grants.ListNOFOChunks(ctx, grantID)
+		if err != nil {
+			return nil, fmt.Errorf("load NOFO chunks: %w", err)
+		}
+		for _, c := range chunks {
+			text += c.Content + "\n\n"
+		}
+	}
+	if text == "" {
+		return nil, fmt.Errorf("no NOFO text stored for this grant — ingest the NOFO first")
+	}
+
+	extracted, err := s.claudeClient.ExtractRequirements(ctx, grant.Title, text)
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	var note *string
+	if extracted.PassThroughNote != "" {
+		note = &extracted.PassThroughNote
+	}
+	return s.grants.UpdateRequirements(ctx, grantID, repository.UpdateRequirementsParams{
+		EligibleApplicants:      extracted.EligibleApplicants,
+		SubmissionPathway:       domain.SubmissionPathway(extracted.SubmissionPathway),
+		PassThroughNote:         note,
+		SubmissionRequirements:  extracted.SubmissionRequirementsMap(),
+		RequirementsExtractedAt: &now,
+	})
 }

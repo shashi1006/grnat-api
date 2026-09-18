@@ -81,6 +81,7 @@ func (s *ScoringService) ComputeScore(ctx context.Context, orgID, grantID uuid.U
 		Tier:              result.Tier,
 		DimensionScores:   result.DimensionScores,
 		Disqualified:      result.Disqualified,
+		SubawardOnly:      result.SubawardOnly,
 		DisqualifyReasons: result.DisqualifyReasons,
 		Strengths:         result.Strengths,
 		Gaps:              result.Gaps,
@@ -135,6 +136,7 @@ func (s *ScoringService) ComputeAllGrantsForOrg(ctx context.Context, orgID uuid.
 				Tier:              result.Tier,
 				DimensionScores:   result.DimensionScores,
 				Disqualified:      result.Disqualified,
+				SubawardOnly:      result.SubawardOnly,
 				DisqualifyReasons: result.DisqualifyReasons,
 				Strengths:         result.Strengths,
 				Gaps:              result.Gaps,
@@ -226,6 +228,7 @@ func (s *ScoringService) EnrichTopGrantsWithLLM(ctx context.Context, orgID uuid.
 			Tier:              updated.Tier,
 			DimensionScores:   updated.DimensionScores,
 			Disqualified:      updated.Disqualified,
+			SubawardOnly:      updated.SubawardOnly,
 			DisqualifyReasons: updated.DisqualifyReasons,
 			Strengths:         updated.Strengths,
 			Gaps:              updated.Gaps,
@@ -360,6 +363,14 @@ func applyLLMToScore(score *domain.CompatibilityScore, llmScore float64, rationa
 		}
 		total := (ruleWeightedSum*scale + llmScore*10.0) / 100.0
 		updated.TotalScore = math.Round(total*10) / 10
+		updated.Tier = domain.ScoreTierFromScore(updated.TotalScore)
+	}
+
+	// An LLM alignment bump can't make a grant directly submittable — keep the
+	// subaward cap (matches the engine's cap) so pass-through-only matches stay
+	// below genuine direct matches.
+	if updated.SubawardOnly && updated.TotalScore > 55 {
+		updated.TotalScore = 55
 		updated.Tier = domain.ScoreTierFromScore(updated.TotalScore)
 	}
 
