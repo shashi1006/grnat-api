@@ -82,17 +82,21 @@ func (h *ProductHandler) SaveProductSelection(c *gin.Context) {
 		return
 	}
 
-	// Try batch format first: { "selections": [...] }
+	// Try batch format first: { "selections": [...] }. The batch PUT is a
+	// replace — selections absent from the payload are deleted, and an empty
+	// list clears the org's selections entirely.
 	var batch struct {
 		Selections []saveSelectionRequest `json:"selections"`
 	}
-	if err := json.Unmarshal(rawBody, &batch); err == nil && len(batch.Selections) > 0 {
+	if err := json.Unmarshal(rawBody, &batch); err == nil {
 		var saved []interface{}
+		var keep []uuid.UUID
 		for _, req := range batch.Selections {
 			productID, err := uuid.Parse(req.ProductID)
 			if err != nil {
 				continue // skip invalid product_ids
 			}
+			keep = append(keep, productID)
 			quantity := req.Quantity
 			if quantity <= 0 {
 				quantity = 1
@@ -112,13 +116,8 @@ func (h *ProductHandler) SaveProductSelection(c *gin.Context) {
 				saved = append(saved, selection)
 			}
 		}
+		_ = h.svc.DeleteSelectionsExcept(c.Request.Context(), orgID, keep)
 		response.OK(c, saved)
-		return
-	}
-
-	// Empty selections is a valid no-op
-	if len(batch.Selections) == 0 {
-		response.OK(c, []interface{}{})
 		return
 	}
 

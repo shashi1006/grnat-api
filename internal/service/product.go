@@ -48,3 +48,9 @@ func (s *ProductService) ListSelections(ctx context.Context, orgID uuid.UUID) ([
 func (s *ProductService) DeleteSelection(ctx context.Context, orgID, productID uuid.UUID) error {
 	return s.products.DeleteSelection(ctx, orgID, productID)
 }
+
+// DeleteSelectionsExcept removes every selection not in the keep list so a
+// batch PUT behaves as a true replace (and an empty list clears everything).
+func (s *ProductService) DeleteSelectionsExcept(ctx context.Context, orgID uuid.UUID, keep []uuid.UUID) error {
+	return s.products.DeleteSelectionsExcept(ctx, orgID, keep)
+}

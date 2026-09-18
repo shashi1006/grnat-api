@@ -478,6 +478,7 @@ type ProductRepo interface {
 	SaveSelection(ctx context.Context, params SaveSelectionParams) (*domain.OrgProductSelection, error)
 	ListSelections(ctx context.Context, orgID uuid.UUID) ([]*domain.OrgProductSelection, error)
 	DeleteSelection(ctx context.Context, orgID, productID uuid.UUID) error
+	DeleteSelectionsExcept(ctx context.Context, orgID uuid.UUID, keep []uuid.UUID) error
 }
 
 type CreateProductParams struct {

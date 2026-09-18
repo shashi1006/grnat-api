@@ -109,6 +109,15 @@ func (r *productRepo) DeleteSelection(ctx context.Context, orgID, productID uuid
 	return err
 }
 
+func (r *productRepo) DeleteSelectionsExcept(ctx context.Context, orgID uuid.UUID, keep []uuid.UUID) error {
+	if len(keep) == 0 {
+		_, err := r.db.Exec(ctx, `DELETE FROM org_product_selections WHERE org_id=$1`, orgID)
+		return err
+	}
+	_, err := r.db.Exec(ctx, `DELETE FROM org_product_selections WHERE org_id=$1 AND product_id <> ALL($2::uuid[])`, orgID, keep)
+	return err
+}
+
 func scanProduct(row scannable) (*domain.Product, error) {
 	var p domain.Product
 	var priceType string
