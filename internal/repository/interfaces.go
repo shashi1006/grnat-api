@@ -290,23 +290,24 @@ type ScoredGrant struct {
 	domain.CompatibilityScore
 
 	// Extra grant fields for the top-grants response.
-	Slug             string   `json:"-"`
-	Title            string   `json:"-"`
-	FunderName       string   `json:"-"`
-	FunderType       string   `json:"-"`
-	Agency           *string  `json:"-"`
-	Description      *string  `json:"-"`
-	Category         *string  `json:"-"`
-	FocusAreas       []string `json:"-"`
-	EligibleOrgTypes []string `json:"-"`
-	MinAwardAmount   *int64   `json:"-"`
-	MaxAwardAmount   *int64   `json:"-"`
-	ApplicationURL   *string  `json:"-"`
-	GrantStatus      string   `json:"-"`
-	Deadline         *string  `json:"-"`
-	DifficultyLevel  string   `json:"-"`
-	CompetitionLevel string   `json:"-"`
-	Tags             []string `json:"-"`
+	Slug                  string   `json:"-"`
+	Title                 string   `json:"-"`
+	FunderName            string   `json:"-"`
+	FunderType            string   `json:"-"`
+	Agency                *string  `json:"-"`
+	Description           *string  `json:"-"`
+	Category              *string  `json:"-"`
+	FocusAreas            []string `json:"-"`
+	EligibleOrgTypes      []string `json:"-"`
+	MinAwardAmount        *int64   `json:"-"`
+	MaxAwardAmount        *int64   `json:"-"`
+	TotalFundingAvailable *int64   `json:"-"`
+	ApplicationURL        *string  `json:"-"`
+	GrantStatus           string   `json:"-"`
+	Deadline              *string  `json:"-"`
+	DifficultyLevel       string   `json:"-"`
+	CompetitionLevel      string   `json:"-"`
+	Tags                  []string `json:"-"`
 
 	// Submission-pathway fields — populated by ListTopGrantsForOrg so the
 	// client can distinguish directly-submittable grants from pass-through
@@ -553,6 +554,7 @@ func (sg ScoredGrant) MarshalJSON() ([]byte, error) {
 	m["eligible_org_types"] = nonil(sg.EligibleOrgTypes)
 	m["min_award_amount"] = sg.MinAwardAmount
 	m["max_award_amount"] = sg.MaxAwardAmount
+	m["total_funding_available"] = sg.TotalFundingAvailable
 	m["application_url"] = sg.ApplicationURL
 	m["status"] = sg.GrantStatus
 	m["deadline"] = sg.Deadline
