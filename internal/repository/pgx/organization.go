@@ -93,7 +93,7 @@ func (r *organizationRepo) Update(ctx context.Context, p repository.UpdateOrgPar
 		WHERE id = $1
 		RETURNING id, name, slug, ein, org_type, mission, address_line1, address_line2,
 		          city, state, zip, county, website, phone, logo_url, plan, plan_expires_at,
-		          is_active, created_at, updated_at`
+		          is_active, created_at, updated_at, NULL as owner_email`
 	return scanOrg(r.db.QueryRow(ctx, q,
 		p.ID, p.Name, p.OrgType, p.Mission, p.City, p.State, p.Zip, p.Website, p.Phone, p.LogoURL,
 	))
