@@ -109,14 +109,12 @@ func (e *Engine) Compute(input domain.ScoringInput) domain.ScoringResult {
 // subawardOnlyCap keeps pass-through-only matches below direct matches.
 const subawardOnlyCap = 55.0
 
-// isSubawardOnly reports whether the grant is administered by another entity
-// and this org type is not an eligible applicant, so the org could only
-// participate as a subrecipient.
+// isSubawardOnly reports whether the grant restricts which entities may
+// submit an application and this org type is not one of them — so the org
+// could only participate as a subrecipient. Applies on any pathway: even
+// "direct" programs (e.g. JAG State Formula) only accept specific applicants.
 func (e *Engine) isSubawardOnly(input domain.ScoringInput) bool {
 	g := input.Grant
-	if g.SubmissionPathway != domain.PathwayPassThrough && g.SubmissionPathway != domain.PathwayMixed {
-		return false
-	}
 	if len(g.EligibleApplicants) == 0 {
 		return false
 	}

@@ -415,3 +415,26 @@ func TestEngine_Compute_DirectPathwayUnaffected(t *testing.T) {
 		t.Error("direct grant must not be flagged subaward-only")
 	}
 }
+
+// A "direct" grant whose applicant list is restricted (e.g. JAG State
+// Formula only accepts states) must also flag non-applicants subaward-only.
+func TestEngine_Compute_SubawardOnlyDirectRestrictedApplicants(t *testing.T) {
+	e := scoring.NewEngine()
+	result := e.Compute(domain.ScoringInput{
+		Org:     baseOrg(), // nonprofit
+		Profile: domain.OrganizationProfile{Has501c3: true},
+		Grant: domain.Grant{
+			ID:                 uuid.New(),
+			Title:              "JAG State Formula",
+			EligibleOrgTypes:   []string{"nonprofit", "government"},
+			EligibleApplicants: []string{"state-government"},
+			SubmissionPathway:  domain.PathwayDirect,
+		},
+	})
+	if result.Disqualified {
+		t.Fatalf("should not disqualify: %v", result.DisqualifyReasons)
+	}
+	if !result.SubawardOnly {
+		t.Error("expected SubawardOnly=true for direct grant with restricted applicants")
+	}
+}
