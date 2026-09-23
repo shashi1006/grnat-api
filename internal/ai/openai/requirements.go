@@ -1,16 +1,20 @@
-package claude
+package openai
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"strings"
 
 	"github.com/readygeneration/readygeneration-backend/internal/domain"
 )
 
-// ExtractRequirements asks Claude to pull applicant eligibility, submission
-// pathway, and program-specific requirements out of raw NOFO text.
+// ExtractRequirements asks OpenAI to pull applicant eligibility, submission
+// pathway, and program-specific requirements out of raw NOFO text. Mirrors the
+// Claude extraction used as the primary path.
 func (c *Client) ExtractRequirements(ctx context.Context, grantTitle, nofoText string) (*domain.ExtractedRequirements, error) {
 	system := `You are an expert grants analyst extracting structured requirements from a Notice of Funding Opportunity (NOFO).
 
@@ -37,23 +41,60 @@ Rules:
 - Be exhaustive for required_forms, set_asides, and certifications — these drive compliance checking.`
 
 	user := fmt.Sprintf("## GRANT\nTitle: %s\n\n## NOFO TEXT\n%s", grantTitle, truncate(nofoText, 45000))
-	temp := 0.1
-	maxTok := int64(2048)
 
-	resp, err := c.Generate(ctx, GenerateRequest{
-		SystemPrompt: system,
-		UserPrompt:   user,
-		Temperature:  &temp,
-		MaxTokens:    &maxTok,
-	})
+	payload := map[string]any{
+		"model": c.model,
+		"messages": []map[string]string{
+			{"role": "system", "content": system},
+			{"role": "user", "content": user},
+		},
+		"temperature": 0.1,
+		"max_tokens":  2048,
+	}
+	body, err := json.Marshal(payload)
 	if err != nil {
-		return nil, fmt.Errorf("claude extract requirements: %w", err)
+		return nil, fmt.Errorf("marshal request: %w", err)
 	}
 
-	raw := stripCodeFence(resp.Content)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, chatURL, bytes.NewReader(body))
+	if err != nil {
+		return nil, fmt.Errorf("create request: %w", err)
+	}
+	httpReq.Header.Set("Authorization", "Bearer "+c.apiKey)
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("call openai: %w", err)
+	}
+	defer resp.Body.Close()
+
+	raw, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read response: %w", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("openai error (status %d): %s", resp.StatusCode, truncate(string(raw), 300))
+	}
+
+	var result struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+	}
+	if err := json.Unmarshal(raw, &result); err != nil {
+		return nil, fmt.Errorf("decode response: %w", err)
+	}
+	if len(result.Choices) == 0 {
+		return nil, fmt.Errorf("no choices in openai response")
+	}
+
+	content := stripCodeFence(strings.TrimSpace(result.Choices[0].Message.Content))
 	var parsed domain.ExtractedRequirements
-	if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
-		return nil, fmt.Errorf("parse requirements response: %w (raw: %s)", err, truncate(raw, 200))
+	if err := json.Unmarshal([]byte(content), &parsed); err != nil {
+		return nil, fmt.Errorf("parse requirements response: %w (raw: %s)", err, truncate(content, 200))
 	}
 
 	switch parsed.SubmissionPathway {

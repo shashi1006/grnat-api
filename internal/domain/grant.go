@@ -61,6 +61,37 @@ const (
 	PathwayMixed       SubmissionPathway = "mixed"
 )
 
+// ExtractedRequirements is the structured requirement set an LLM pulls out of
+// NOFO text. EligibleApplicants lists the entity types that may SUBMIT an
+// application (snake_case labels, e.g. "state-administrative-agency"), as
+// distinct from orgs that may only benefit via subawards.
+type ExtractedRequirements struct {
+	EligibleApplicants []string `json:"eligible_applicants"`
+	SubmissionPathway  string   `json:"submission_pathway"` // direct | pass_through | mixed
+	PassThroughNote    string   `json:"pass_through_note"`
+	RequiredForms      []string `json:"required_forms"`
+	NarrativeSections  []string `json:"narrative_sections"`
+	SetAsides          []string `json:"set_asides"`
+	Certifications     []string `json:"certifications"`
+	AwardConstraints   string   `json:"award_constraints"`
+	EligibleOrgTypes   []string `json:"eligible_org_types"`
+	EligibleStates     []string `json:"eligible_states"`
+	MinAwardDollars    *int64   `json:"min_award_dollars"`
+	MaxAwardDollars    *int64   `json:"max_award_dollars"`
+}
+
+// SubmissionRequirementsMap returns the fields that belong in
+// grants.submission_requirements (everything except the top-level columns).
+func (r *ExtractedRequirements) SubmissionRequirementsMap() map[string]interface{} {
+	return map[string]interface{}{
+		"required_forms":     r.RequiredForms,
+		"narrative_sections": r.NarrativeSections,
+		"set_asides":         r.SetAsides,
+		"certifications":     r.Certifications,
+		"award_constraints":  r.AwardConstraints,
+	}
+}
+
 // Grant represents a funding opportunity in the catalog.
 type Grant struct {
 	ID                      uuid.UUID              `json:"id"`

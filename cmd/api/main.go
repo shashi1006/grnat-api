@@ -106,7 +106,7 @@ func main() {
 	// --- Services ---
 	emailSvc := service.NewEmailService(cfg.Email)
 	authSvc := service.NewAuthService(userRepo, jwtMgr, cfg.Firebase.WebAPIKey, cfg.App.FrontendURL, emailSvc)
-	grantSvc := service.NewGrantService(grantRepo, embedSvc, ragEngine, claudeClient)
+	grantSvc := service.NewGrantService(grantRepo, embedSvc, ragEngine, claudeClient, openAIScoringClient)
 	scoringSvc := service.NewScoringService(orgRepo, grantRepo, scoreRepo, productRepo, scoringEngine, claudeClient, openAIScoringClient, grantSvc)
 	orgSvc := service.NewOrgService(orgRepo, embedSvc)
 	appSvc := service.NewApplicationService(appRepo, grantRepo, scoreRepo)

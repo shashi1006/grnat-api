@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/readygeneration/readygeneration-backend/internal/ai/claude"
 	"github.com/readygeneration/readygeneration-backend/internal/ai/embedding"
+	"github.com/readygeneration/readygeneration-backend/internal/ai/openai"
 	"github.com/readygeneration/readygeneration-backend/internal/ai/rag"
 	"github.com/readygeneration/readygeneration-backend/internal/domain"
 	"github.com/readygeneration/readygeneration-backend/internal/repository"
@@ -19,11 +20,12 @@ type GrantService struct {
 	embedSvc     *embedding.Service
 	ragEngine    *rag.Engine
 	claudeClient *claude.Client
+	openAIClient *openai.Client
 }
 
 // NewGrantService creates a GrantService.
-func NewGrantService(grants repository.GrantRepo, embedSvc *embedding.Service, ragEngine *rag.Engine, claudeClient *claude.Client) *GrantService {
-	return &GrantService{grants: grants, embedSvc: embedSvc, ragEngine: ragEngine, claudeClient: claudeClient}
+func NewGrantService(grants repository.GrantRepo, embedSvc *embedding.Service, ragEngine *rag.Engine, claudeClient *claude.Client, openAIClient *openai.Client) *GrantService {
+	return &GrantService{grants: grants, embedSvc: embedSvc, ragEngine: ragEngine, claudeClient: claudeClient, openAIClient: openAIClient}
 }
 
 // ListGrants returns a paginated list of active grants.
@@ -109,7 +111,7 @@ func (s *GrantService) ArchiveGrant(ctx context.Context, id uuid.UUID) error {
 // forms, narrative sections, set-asides, and certifications — and persists
 // them on the grant.
 func (s *GrantService) ExtractRequirements(ctx context.Context, grantID uuid.UUID) (*domain.Grant, error) {
-	if s.claudeClient == nil {
+	if s.claudeClient == nil && s.openAIClient == nil {
 		return nil, fmt.Errorf("no LLM client configured for requirement extraction")
 	}
 
@@ -135,8 +137,14 @@ func (s *GrantService) ExtractRequirements(ctx context.Context, grantID uuid.UUI
 		return nil, fmt.Errorf("no NOFO text stored for this grant — ingest the NOFO first")
 	}
 
-	extracted, err := s.claudeClient.ExtractRequirements(ctx, grant.Title, text)
-	if err != nil {
+	var extracted *domain.ExtractedRequirements
+	if s.claudeClient != nil {
+		extracted, err = s.claudeClient.ExtractRequirements(ctx, grant.Title, text)
+	}
+	if extracted == nil && s.openAIClient != nil {
+		extracted, err = s.openAIClient.ExtractRequirements(ctx, grant.Title, text)
+	}
+	if err != nil && extracted == nil {
 		return nil, err
 	}
 
