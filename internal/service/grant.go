@@ -158,12 +158,23 @@ func (s *GrantService) ExtractRequirements(ctx context.Context, grantID uuid.UUI
 	if len(extracted.EligibleApplicants) > 0 {
 		reqs["eligible_applicants_raw"] = extracted.EligibleApplicants
 	}
+	var minCents, maxCents *int64
+	if extracted.MinAwardDollars != nil && *extracted.MinAwardDollars > 0 {
+		v := *extracted.MinAwardDollars * 100
+		minCents = &v
+	}
+	if extracted.MaxAwardDollars != nil && *extracted.MaxAwardDollars > 0 {
+		v := *extracted.MaxAwardDollars * 100
+		maxCents = &v
+	}
 	return s.grants.UpdateRequirements(ctx, grantID, repository.UpdateRequirementsParams{
 		EligibleApplicants:      normalizeApplicants(extracted.EligibleApplicants),
 		SubmissionPathway:       domain.SubmissionPathway(extracted.SubmissionPathway),
 		PassThroughNote:         note,
 		SubmissionRequirements:  reqs,
 		RequirementsExtractedAt: &now,
+		MinAwardCents:           minCents,
+		MaxAwardCents:           maxCents,
 	})
 }
 

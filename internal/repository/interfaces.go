@@ -229,6 +229,9 @@ type UpdateRequirementsParams struct {
 	PassThroughNote         *string
 	SubmissionRequirements  map[string]interface{}
 	RequirementsExtractedAt *time.Time
+	// Extracted award figures (cents); nil leaves the column unchanged.
+	MinAwardCents *int64
+	MaxAwardCents *int64
 }
 
 type GrantWithDistance struct {

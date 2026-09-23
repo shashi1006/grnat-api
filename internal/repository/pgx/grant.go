@@ -197,6 +197,8 @@ func (r *grantRepo) UpdateRequirements(ctx context.Context, id uuid.UUID, p repo
 		    pass_through_note         = $4,
 		    submission_requirements   = $5,
 		    requirements_extracted_at = $6,
+		    min_award_amount          = COALESCE($7, min_award_amount),
+		    max_award_amount          = COALESCE($8, max_award_amount),
 		    updated_at                = NOW()
 		WHERE id=$1 RETURNING *`
 	return scanGrant(r.db.QueryRow(ctx, q,
@@ -206,6 +208,8 @@ func (r *grantRepo) UpdateRequirements(ctx context.Context, id uuid.UUID, p repo
 		p.PassThroughNote,
 		reqJSON,
 		p.RequirementsExtractedAt,
+		p.MinAwardCents,
+		p.MaxAwardCents,
 	))
 }
 
