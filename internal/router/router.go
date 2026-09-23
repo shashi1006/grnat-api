@@ -155,6 +155,7 @@ func New(deps Deps) *gin.Engine {
 		admin.DELETE("/grants/:id", deps.Grant.ArchiveGrant)
 		admin.POST("/grants/:id/nofo", deps.Grant.IngestNOFO)
 		admin.POST("/grants/:id/extract-requirements", deps.Grant.ExtractRequirements)
+		admin.POST("/grants/:id/enrich", deps.Grant.EnrichGrant)
 
 		// Lead management
 		admin.GET("/leads", deps.Lead.ListLeads)

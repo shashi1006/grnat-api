@@ -164,7 +164,45 @@ func (h *GrantHandler) CreateGrant(c *gin.Context) {
 		response.InternalError(c, err)
 		return
 	}
+
+	// If a source URL was provided, auto-fetch the NOFO, ingest it, and
+	// extract requirements in the background — no manual admin steps needed.
+	src := ""
+	if req.NofoURL != nil {
+		src = *req.NofoURL
+	}
+	if src == "" && req.ApplicationURL != nil {
+		src = *req.ApplicationURL
+	}
+	if src != "" {
+		h.grantSvc.AutoEnrichAsync(grant.ID, src)
+	}
 	response.Created(c, grant)
+}
+
+// EnrichGrant godoc
+// @Summary      Fetch the grant's NOFO from its source URL, ingest it, and extract requirements (admin)
+// @Tags         grants
+// @Security     BearerAuth
+// @Param        id    path   string  true  "Grant UUID"
+// @Param        body  body   map[string]string  false  "Optional {\"url\": \"...\"} override"
+// @Success      200  {object}  response.Envelope
+// @Router       /admin/grants/{id}/enrich [post]
+func (h *GrantHandler) EnrichGrant(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "invalid grant id")
+		return
+	}
+	var body struct {
+		URL string `json:"url"`
+	}
+	_ = c.ShouldBindJSON(&body) // body optional — fall back to application_url
+	if err := h.grantSvc.AutoEnrich(c.Request.Context(), id, body.URL); err != nil {
+		response.InternalError(c, err)
+		return
+	}
+	response.OK(c, gin.H{"message": "grant enriched from source URL"})
 }
 
 // IngestNOFO godoc
@@ -311,6 +349,7 @@ type createGrantRequest struct {
 	MaxAwardAmount        *int64                  `json:"max_award_amount"`
 	TotalFundingAvailable *int64                  `json:"total_funding_available"`
 	ApplicationURL        *string                 `json:"application_url"`
+	NofoURL               *string                 `json:"nofo_url"`
 	Status                domain.GrantStatus      `json:"status"`
 	Deadline              *string                 `json:"deadline"`
 	OpenDate              *string                 `json:"open_date"`
