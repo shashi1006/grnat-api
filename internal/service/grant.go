@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -153,11 +154,67 @@ func (s *GrantService) ExtractRequirements(ctx context.Context, grantID uuid.UUI
 	if extracted.PassThroughNote != "" {
 		note = &extracted.PassThroughNote
 	}
+	reqs := extracted.SubmissionRequirementsMap()
+	if len(extracted.EligibleApplicants) > 0 {
+		reqs["eligible_applicants_raw"] = extracted.EligibleApplicants
+	}
 	return s.grants.UpdateRequirements(ctx, grantID, repository.UpdateRequirementsParams{
-		EligibleApplicants:      extracted.EligibleApplicants,
+		EligibleApplicants:      normalizeApplicants(extracted.EligibleApplicants),
 		SubmissionPathway:       domain.SubmissionPathway(extracted.SubmissionPathway),
 		PassThroughNote:         note,
-		SubmissionRequirements:  extracted.SubmissionRequirementsMap(),
+		SubmissionRequirements:  reqs,
 		RequirementsExtractedAt: &now,
 	})
+}
+
+// applicantAliases maps grants.gov/NOFO-style applicant-type labels onto the
+// platform's org-type slugs so extracted eligible_applicants can actually
+// match Organization.OrgType. "state-administrative-agency" is deliberately
+// unmapped — it is a distinct applicant role (only the SAA submits HSGP/NSGP),
+// not a generic government org type.
+var applicantAliases = map[string][]string{
+	"state-government":                   {"government"},
+	"local-government":                   {"municipality-government"},
+	"county-government":                  {"municipality-government"},
+	"city-or-township-government":        {"municipality-government"},
+	"units-of-local-government":          {"municipality-government"},
+	"special-district-government":        {"municipality-government"},
+	"tribal-government":                  {"tribal"},
+	"native-american-tribal-governments": {"tribal"},
+	"public-agency":                      {"government", "municipality-government", "public-safety", "higher-ed"},
+	"public-and-state-controlled-institutions-of-higher-education": {"higher-ed"},
+	"private-institutions-of-higher-education":                     {"higher-ed"},
+	"institutions-of-higher-education":                             {"higher-ed"},
+	"independent-school-districts":                                 {"k12-schools"},
+	"public-charter-schools":                                       {"k12-schools"},
+	"private-k12-schools":                                          {"k12-schools"},
+	"nonprofits-having-a-501c3-status":                             {"nonprofit", "nonprofit-community", "faith", "houses-of-worship"},
+	"nonprofits-that-do-not-have-a-501c3-status":                   {"nonprofit", "nonprofit-community"},
+	"nonprofit-organization":                                       {"nonprofit", "nonprofit-community"},
+	"hospital":                                                     {"hospitals-health-systems", "ems-healthcare"},
+	"hospitals":                                                    {"hospitals-health-systems", "ems-healthcare"},
+}
+
+// normalizeApplicants maps extracted applicant labels to platform org-type
+// slugs, keeping already-canonical labels untouched and deduping the result.
+func normalizeApplicants(labels []string) []string {
+	seen := map[string]bool{}
+	var out []string
+	add := func(s string) {
+		if s != "" && !seen[s] {
+			seen[s] = true
+			out = append(out, s)
+		}
+	}
+	for _, l := range labels {
+		l = strings.ToLower(strings.TrimSpace(l))
+		if mapped, ok := applicantAliases[l]; ok {
+			for _, m := range mapped {
+				add(m)
+			}
+			continue
+		}
+		add(l)
+	}
+	return out
 }
