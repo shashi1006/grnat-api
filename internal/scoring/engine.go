@@ -84,6 +84,22 @@ func (e *Engine) Compute(input domain.ScoringInput) domain.ScoringResult {
 	result.Gaps = nonNil(e.deriveGaps(dims))
 	result.Recommendations = nonNil(e.deriveRecommendations(input, dims))
 
+	// Program-scope conflicts: an unallowable activity that names the org's
+	// sector (e.g. STOP lists "higher education campus violence") means the
+	// project itself is out of scope even though the org type may apply.
+	if scope := e.orgScopeConflict(input); scope != "" {
+		if result.TotalScore > subawardOnlyCap {
+			result.TotalScore = subawardOnlyCap
+			result.Tier = domain.ScoreTierFromScore(result.TotalScore)
+		}
+		result.Gaps = append([]string{
+			fmt.Sprintf("Program scope excludes %s — this project may be ineligible even though the organization type can apply.", scope),
+		}, result.Gaps...)
+		result.Recommendations = append([]string{
+			"Review the program's unallowable activities — the funded purpose conflicts with this organization's sector.",
+		}, result.Recommendations...)
+	}
+
 	// Pass-through programs the org cannot submit itself: the org may still
 	// receive a subaward, so don't disqualify — but cap the score so it never
 	// outranks a genuinely submittable match, and flag the pathway.
@@ -108,6 +124,55 @@ func (e *Engine) Compute(input domain.ScoringInput) domain.ScoringResult {
 
 // subawardOnlyCap keeps pass-through-only matches below direct matches.
 const subawardOnlyCap = 55.0
+
+// orgScopeConflict reports the unallowable-cost entry that names the org's
+// sector, if any — e.g. a K-12 school-violence program that excludes
+// "higher education campus violence" can't fund a university's campus
+// project even though higher-ed entities may appear as applicants.
+func (e *Engine) orgScopeConflict(input domain.ScoringInput) string {
+	unallowable := reqStrings(input.Grant.SubmissionRequirements, "unallowable_costs")
+	if len(unallowable) == 0 {
+		return ""
+	}
+	// org type -> sector keywords an exclusion phrase might use
+	sectorTerms := map[domain.OrgType][]string{
+		domain.OrgTypeHigherEd:           {"higher education", "college", "university", "campus"},
+		domain.OrgTypeK12Schools:         {"k-12", "k12", "elementary", "secondary school"},
+		domain.OrgTypeFaith:              {"house of worship", "houses of worship", "faith-based", "religious"},
+		domain.OrgTypeHousesOfWorship:    {"house of worship", "houses of worship", "faith-based", "religious"},
+		domain.OrgTypeHospitalsHealth:    {"hospital", "health system", "health care"},
+		domain.OrgTypeEMSHealthcare:      {"ems", "emergency medical", "health care"},
+		domain.OrgTypeNonprofit:          {"nonprofit", "non-profit"},
+		domain.OrgTypeNonprofitCommunity: {"nonprofit", "non-profit"},
+		domain.OrgTypeTribal:             {"tribal", "tribe"},
+		domain.OrgTypePublicSafety:       {"law enforcement", "police"},
+	}
+	terms := sectorTerms[input.Org.OrgType]
+	for _, u := range unallowable {
+		l := strings.ToLower(u)
+		for _, t := range terms {
+			if strings.Contains(l, t) {
+				return u
+			}
+		}
+	}
+	return ""
+}
+
+// reqStrings pulls a []string out of the submission_requirements JSONB map.
+func reqStrings(reqs map[string]interface{}, key string) []string {
+	raw, ok := reqs[key].([]interface{})
+	if !ok {
+		return nil
+	}
+	out := make([]string, 0, len(raw))
+	for _, v := range raw {
+		if s, ok := v.(string); ok && s != "" {
+			out = append(out, s)
+		}
+	}
+	return out
+}
 
 // isSubawardOnly reports whether the grant restricts which entities may
 // submit an application and this org type is not one of them — so the org
@@ -233,6 +298,20 @@ func (e *Engine) scoreProductProjectMatch(input domain.ScoringInput) domain.Dime
 	explanation := fmt.Sprintf("%d of %d selected products align: %s", matched, len(products), strings.Join(matchedNames, ", "))
 	if matched == 0 {
 		explanation = "Selected products do not align with this grant's focus areas"
+	}
+
+	// Equipment exclusions: a NOFO that lists equipment/hardening purchases as
+	// unallowable (e.g. STOP SVPP defers equipment to COPS SVPP) can't fund a
+	// hardware deployment regardless of thematic alignment.
+	for _, u := range reqStrings(g.SubmissionRequirements, "unallowable_costs") {
+		l := strings.ToLower(u)
+		if strings.Contains(l, "equipment") || strings.Contains(l, "hardening") {
+			if score > 25 {
+				score = 25
+			}
+			explanation += fmt.Sprintf("; however the program lists '%s' as unallowable — equipment purchases cannot be funded", u)
+			break
+		}
 	}
 	return domain.DimensionScore{Key: "product_project_match", Score: score, MaxScore: 100, Weight: weight, Explanation: explanation}
 }
