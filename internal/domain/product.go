@@ -59,5 +59,6 @@ type ProductSelectionContext struct {
 	UnitPrice        string // formatted USD
 	Subtotal         string // formatted USD
 	SelectedAddons   []string
+	Configuration    string // human-readable breakdown of what the selected config includes
 	FundingAlignment []string
 }

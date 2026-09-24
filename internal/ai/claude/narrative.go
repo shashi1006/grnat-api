@@ -140,6 +140,7 @@ func buildUserPrompt(req NarrativeRequest) string {
 		addList("required_forms", "Required forms")
 		addList("narrative_sections", "Required narrative sections")
 		addList("set_asides", "Mandatory set-asides")
+		addList("unallowable_costs", "Unallowable costs/activities (do not propose funding these)")
 		addList("certifications", "Required certifications")
 		if s, ok := reqs["award_constraints"].(string); ok && s != "" {
 			lines = append(lines, "Award constraints: "+s)
@@ -192,6 +193,9 @@ func buildUserPrompt(req NarrativeRequest) string {
 			if p.Description != "" {
 				b.WriteString(fmt.Sprintf("   Description: %s\n", p.Description))
 			}
+			if p.Configuration != "" {
+				b.WriteString(fmt.Sprintf("   Configuration: %s\n", p.Configuration))
+			}
 			if p.Category != "" {
 				b.WriteString(fmt.Sprintf("   Category: %s\n", p.Category))
 			}
@@ -223,6 +227,9 @@ func buildUserPrompt(req NarrativeRequest) string {
 	b.WriteString("Focus on outcomes, community impact, and organizational qualifications.\n")
 	b.WriteString("Do not include a title or header — begin directly with the narrative content.\n")
 	b.WriteString("Use exact product names, quantities, and dollar amounts from SELECTED SOLUTIONS & PRODUCTS.\n")
+	b.WriteString("Respect each product's Configuration field exactly: units marked 'no AED' contain no AED and " +
+		"must never be described as including or providing one; 'AED-ready' means the cabinet accepts the " +
+		"organization's own existing AEDs — an AED is NOT supplied by this project.\n")
 	b.WriteString("When mentioning a subtotal, use the full figure exactly as shown (e.g., $18,800.00).\n")
 
 	return b.String()

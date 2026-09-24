@@ -74,7 +74,7 @@ Scoring guidelines:
 - 25-49: Poor fit; major mismatches in eligibility, mission, capacity, or the grant award is far below the project cost.
 - 0-24: Very unlikely; hard disqualifiers or mission/location/capacity mismatch.
 
-Consider only the products, amounts, and facts provided in the context. Do not introduce additional products or equipment. If the grant's max award is less than the project cost, lower the score and explain the shortfall.`
+Consider only the products, amounts, and facts provided in the context. Do not introduce additional products or equipment. If the grant's max award is less than the project cost, lower the score and explain the shortfall. If the selected products fall under the grant's listed unallowable costs or excluded purchase categories, lower the score significantly and call out the conflict.`
 
 	user := buildGrantFitPrompt(req)
 
@@ -217,6 +217,25 @@ func buildGrantFitPrompt(req GrantFitRequest) string {
 	if req.Grant.MaxAwardAmount != nil {
 		b.WriteString(fmt.Sprintf("Max Award: $%s\n", formatCents(*req.Grant.MaxAwardAmount)))
 	}
+	if reqs := req.Grant.SubmissionRequirements; len(reqs) > 0 {
+		addReqList := func(key, label string) {
+			raw, ok := reqs[key].([]interface{})
+			if !ok {
+				return
+			}
+			var items []string
+			for _, v := range raw {
+				if s, ok := v.(string); ok && s != "" {
+					items = append(items, s)
+				}
+			}
+			if len(items) > 0 {
+				b.WriteString(fmt.Sprintf("%s: %s\n", label, strings.Join(items, "; ")))
+			}
+		}
+		addReqList("unallowable_costs", "Unallowable costs/activities")
+		addReqList("set_asides", "Mandatory set-asides")
+	}
 
 	if req.Score != nil && !req.Score.Disqualified {
 		b.WriteString(fmt.Sprintf("\n## RULE-BASED COMPATIBILITY SCORE\nTotal: %.1f\nTier: %s\n", req.Score.TotalScore, req.Score.Tier))
@@ -242,6 +261,9 @@ func buildGrantFitPrompt(req GrantFitRequest) string {
 			b.WriteString(fmt.Sprintf("%d. %s (Qty: %d, Unit Cost: $%s, Subtotal: $%s)\n", i+1, p.Name, p.Quantity, p.UnitPrice, p.Subtotal))
 			if p.Description != "" {
 				b.WriteString(fmt.Sprintf("   Description: %s\n", p.Description))
+			}
+			if p.Configuration != "" {
+				b.WriteString(fmt.Sprintf("   Configuration: %s\n", p.Configuration))
 			}
 			if p.Category != "" {
 				b.WriteString(fmt.Sprintf("   Category: %s\n", p.Category))

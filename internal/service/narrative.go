@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -206,6 +207,7 @@ func (s *NarrativeService) buildProductContext(ctx context.Context, orgID uuid.U
 			UnitPrice:      formatCents(sel.UnitPriceCents),
 			Subtotal:       formatCents(sel.SubtotalCents),
 			SelectedAddons: sel.SelectedAddons,
+			Configuration:  describeConfiguration(sel.ConfigurationID),
 		}
 		if product.Description != nil {
 			p.Description = *product.Description
@@ -221,6 +223,65 @@ func (s *NarrativeService) buildProductContext(ctx context.Context, orgID uuid.U
 		out = append(out, p)
 	}
 	return out
+}
+
+// describeConfiguration turns the stored configuration JSON — a map like
+// {"bleeding-only":{"qty":3,"trauma":"bleeding-control","aed":true},
+//
+//	"aed-included":{"qty":1,"trauma":"aed-bleeding-control"}} — into an
+//
+// explicit description of what each unit contains. This is what keeps the
+// AI from claiming AEDs are included when they aren't: the bleeding-only
+// offering never carries an AED, and the AED-ready flag means the cabinet
+// accepts the customer's own AEDs, not that one is supplied.
+func describeConfiguration(configID *string) string {
+	if configID == nil || *configID == "" {
+		return ""
+	}
+	var cfg map[string]struct {
+		Qty    int    `json:"qty"`
+		Trauma string `json:"trauma"`
+		AED    bool   `json:"aed"`
+	}
+	if err := json.Unmarshal([]byte(*configID), &cfg); err != nil {
+		return *configID // legacy plain-string config — pass through
+	}
+	traumaLabel := map[string]string{
+		"bleeding-control":              "basic bleeding control kits",
+		"advanced-bleeding-control":     "advanced bleeding control kits",
+		"aed-bleeding-control":          "basic bleeding control kits",
+		"aed-advanced-bleeding-control": "advanced bleeding control kits",
+	}
+	var parts []string
+	// deterministic order for stable prompts
+	for _, key := range []string{"bleeding-only", "aed-included"} {
+		e, ok := cfg[key]
+		if !ok || e.Qty == 0 {
+			continue
+		}
+		kit := traumaLabel[e.Trauma]
+		if kit == "" {
+			kit = e.Trauma
+		}
+		switch key {
+		case "bleeding-only":
+			if e.AED {
+				parts = append(parts, fmt.Sprintf("%d x AED-ready bleeding control cabinet with %s (cabinet fits customer-supplied AEDs; AED NOT included)", e.Qty, kit))
+			} else {
+				parts = append(parts, fmt.Sprintf("%d x bleeding control cabinet with %s (no AED; no AED provision)", e.Qty, kit))
+			}
+		case "aed-included":
+			parts = append(parts, fmt.Sprintf("%d x emergency aid cabinet with ZOLL 3 AED and %s (AED included)", e.Qty, kit))
+		}
+	}
+	// unknown keys fall back to "qty x key"
+	for key, e := range cfg {
+		if key == "bleeding-only" || key == "aed-included" || e.Qty == 0 {
+			continue
+		}
+		parts = append(parts, fmt.Sprintf("%d x %s", e.Qty, key))
+	}
+	return strings.Join(parts, "; ")
 }
 
 // formatCents converts a cents amount to a plain whole-dollar string

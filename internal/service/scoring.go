@@ -323,6 +323,7 @@ func (s *ScoringService) buildProductContext(ctx context.Context, orgID uuid.UUI
 			UnitPrice:      formatCents(sel.UnitPriceCents),
 			Subtotal:       formatCents(sel.SubtotalCents),
 			SelectedAddons: sel.SelectedAddons,
+			Configuration:  describeConfiguration(sel.ConfigurationID),
 		}
 		if product.Description != nil {
 			p.Description = *product.Description

@@ -72,6 +72,7 @@ type ExtractedRequirements struct {
 	RequiredForms      []string `json:"required_forms"`
 	NarrativeSections  []string `json:"narrative_sections"`
 	SetAsides          []string `json:"set_asides"`
+	UnallowableCosts   []string `json:"unallowable_costs"`
 	Certifications     []string `json:"certifications"`
 	AwardConstraints   string   `json:"award_constraints"`
 	EligibleOrgTypes   []string `json:"eligible_org_types"`
@@ -87,6 +88,7 @@ func (r *ExtractedRequirements) SubmissionRequirementsMap() map[string]interface
 		"required_forms":     r.RequiredForms,
 		"narrative_sections": r.NarrativeSections,
 		"set_asides":         r.SetAsides,
+		"unallowable_costs":  r.UnallowableCosts,
 		"certifications":     r.Certifications,
 		"award_constraints":  r.AwardConstraints,
 	}
