@@ -67,6 +67,32 @@ func (s *GrantService) AutoEnrich(ctx context.Context, grantID uuid.UUID, source
 	return nil
 }
 
+// IngestNOFOFile accepts an uploaded NOFO document (PDF or plain text),
+// extracts its text, ingests it for RAG, and runs requirement extraction —
+// the full "drop the document in" pipeline in one call.
+func (s *GrantService) IngestNOFOFile(ctx context.Context, grantID uuid.UUID, filename string, data []byte) error {
+	var text string
+	if strings.HasSuffix(strings.ToLower(filename), ".pdf") || bytes.HasPrefix(data, []byte("%PDF")) {
+		t, err := pdfToText(data)
+		if err != nil {
+			return fmt.Errorf("parse pdf: %w", err)
+		}
+		text = t
+	} else {
+		text = string(data)
+	}
+	if len(strings.TrimSpace(text)) < 200 {
+		return fmt.Errorf("extracted text too short (%d chars) — upload the NOFO/solicitation document", len(text))
+	}
+	if err := s.IngestNOFO(ctx, grantID, text); err != nil {
+		return fmt.Errorf("ingest NOFO: %w", err)
+	}
+	if _, err := s.ExtractRequirements(ctx, grantID); err != nil {
+		return fmt.Errorf("extract requirements: %w", err)
+	}
+	return nil
+}
+
 // fetchNOFOText downloads a URL and returns plain text. PDFs are parsed;
 // grants.gov detail pages resolve to their attachment PDFs; HTML pages either
 // surface a linked NOFO PDF or fall back to stripped page text.

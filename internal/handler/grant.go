@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"io"
 	"strconv"
 	"strings"
 
@@ -231,6 +232,45 @@ func (h *GrantHandler) IngestNOFO(c *gin.Context) {
 		return
 	}
 	response.OK(c, gin.H{"message": "NOFO ingested and chunked successfully"})
+}
+
+// UploadNOFO godoc
+// @Summary      Upload a NOFO document file (PDF or text) — ingests, chunks, embeds, and extracts requirements (admin)
+// @Tags         grants
+// @Security     BearerAuth
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        id    path   string  true  "Grant UUID"
+// @Param        file  formData file   true  "NOFO document (PDF or text)"
+// @Success      200  {object}  response.Envelope
+// @Router       /admin/grants/{id}/nofo-file [post]
+func (h *GrantHandler) UploadNOFO(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "invalid grant id")
+		return
+	}
+	fh, err := c.FormFile("file")
+	if err != nil {
+		response.BadRequest(c, "file field 'file' is required")
+		return
+	}
+	f, err := fh.Open()
+	if err != nil {
+		response.InternalError(c, err)
+		return
+	}
+	defer f.Close()
+	data, err := io.ReadAll(io.LimitReader(f, 40<<20))
+	if err != nil {
+		response.InternalError(c, err)
+		return
+	}
+	if err := h.grantSvc.IngestNOFOFile(c.Request.Context(), id, fh.Filename, data); err != nil {
+		response.InternalError(c, err)
+		return
+	}
+	response.OK(c, gin.H{"message": "NOFO uploaded, ingested, and requirements extracted"})
 }
 
 // ExtractRequirements godoc

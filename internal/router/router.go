@@ -154,6 +154,7 @@ func New(deps Deps) *gin.Engine {
 		admin.PATCH("/grants/:id", deps.Grant.UpdateGrant)
 		admin.DELETE("/grants/:id", deps.Grant.ArchiveGrant)
 		admin.POST("/grants/:id/nofo", deps.Grant.IngestNOFO)
+		admin.POST("/grants/:id/nofo-file", deps.Grant.UploadNOFO)
 		admin.POST("/grants/:id/extract-requirements", deps.Grant.ExtractRequirements)
 		admin.POST("/grants/:id/enrich", deps.Grant.EnrichGrant)
 
